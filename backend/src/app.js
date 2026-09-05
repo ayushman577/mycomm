@@ -15,7 +15,7 @@ const app = express();
 app.use(express.json());
 
 app.use(cors({
-    origin: 'http://localhost:5173', // Replace with your frontend URL
+    origin: 'FRONTEND_URL', // Replace with your frontend URL
     credentials: true, // Allow credentials (cookies) to be sent
 }));
 
