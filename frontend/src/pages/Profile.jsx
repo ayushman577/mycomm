@@ -1,492 +1,468 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-    getProfile,
-    updateProfile,
-    changePassword
-} from '../services/profileService';
+
+import { getProfile, updateProfile, changePassword } from '../services/profileService';
+import { logout } from '../services/authService';
 
 function Profile() {
+
     const navigate = useNavigate();
 
-    const [user, setUser] = useState(null);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState('');
+    const [profile, setProfile] = useState(null);
 
-    /* ========================================
-        PROFILE EDIT STATE
-    ======================================== */
-    const [username, setUsername] = useState('');
-    const [phone, setPhone] = useState('');
-    const [profileLoading, setProfileLoading] = useState(false);
-    const [profileMessage, setProfileMessage] = useState('');
-    const [profileError, setProfileError] = useState('');
+    const [name, setName] = useState('');
+    const [email, setEmail] = useState('');
 
-    /* ========================================
-        CHANGE PASSWORD STATE
-    ======================================== */
-    const [showPasswordForm, setShowPasswordForm] = useState(false);
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
     const [confirmPassword, setConfirmPassword] = useState('');
-    const [passwordLoading, setPasswordLoading] = useState(false);
-    const [passwordMessage, setPasswordMessage] = useState('');
-    const [passwordError, setPasswordError] = useState('');
 
-    /* ========================================
-        LOGOUT MODAL STATE
-    ======================================== */
-    const [showLogoutModal, setShowLogoutModal] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [passwordLoading, setPasswordLoading] = useState(false);
     const [logoutLoading, setLogoutLoading] = useState(false);
 
+    const [message, setMessage] = useState('');
+    const [error, setError] = useState('');
+
+    const [showLogoutModal, setShowLogoutModal] = useState(false);
+
     useEffect(() => {
-        const loadProfile = async () => {
-            try {
-                setLoading(true);
-                setError('');
-
-                const response = await getProfile();
-                const currentUser = response.data.user;
-
-                setUser(currentUser);
-                setUsername(currentUser?.username || '');
-                setPhone(currentUser?.phone || '');
-            } catch (err) {
-                console.error('Error loading profile:', err);
-                setError(err.response?.data?.message || 'Failed to load your profile.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
         loadProfile();
     }, []);
 
-    const handleUpdateProfile = async (event) => {
-        event.preventDefault();
-        setProfileMessage('');
-        setProfileError('');
-
-        if (!username.trim()) {
-            setProfileError('Username cannot be empty.');
-            return;
-        }
+    const loadProfile = async () => {
 
         try {
-            setProfileLoading(true);
-            const response = await updateProfile({
-                username: username.trim(),
-                phone: phone.trim()
-            });
 
-            const updatedUser = response.data.user;
-            setUser(updatedUser);
-            setUsername(updatedUser?.username || '');
-            setPhone(updatedUser?.phone || '');
-            setProfileMessage(response.data.message || 'Profile updated successfully.');
+            setLoading(true);
+            setError('');
+
+            const response = await getProfile();
+
+            const user = response.data.user || response.data;
+
+            setProfile(user);
+
+            setName(user.name || '');
+            setEmail(user.email || '');
+
         } catch (err) {
-            console.error('Update profile error:', err);
-            setProfileError(err.response?.data?.message || 'Failed to update your profile.');
+
+            console.error('Error loading profile:', err);
+
+            setError(
+                err.response?.data?.message ||
+                'Unable to load profile.'
+            );
+
         } finally {
-            setProfileLoading(false);
+
+            setLoading(false);
+
         }
     };
 
-    const handleChangePassword = async (event) => {
+    const handleProfileUpdate = async (event) => {
+
         event.preventDefault();
-        setPasswordMessage('');
-        setPasswordError('');
 
-        if (!currentPassword) {
-            setPasswordError('Current password is required.');
-            return;
+        setMessage('');
+        setError('');
+
+        try {
+
+            setSaving(true);
+
+            const response = await updateProfile({
+                name
+            });
+
+            const updatedUser = response.data.user || response.data;
+
+            setProfile(updatedUser);
+            setName(updatedUser.name || name);
+
+            setMessage('Profile updated successfully.');
+
+        } catch (err) {
+
+            console.error('Profile update error:', err);
+
+            setError(
+                err.response?.data?.message ||
+                'Unable to update profile.'
+            );
+
+        } finally {
+
+            setSaving(false);
+
         }
+    };
 
-        if (!newPassword || newPassword.length < 6) {
-            setPasswordError('New password must be at least 6 characters long.');
+    const handlePasswordChange = async (event) => {
+
+        event.preventDefault();
+
+        setMessage('');
+        setError('');
+
+        if (!currentPassword || !newPassword || !confirmPassword) {
+
+            setError('Please fill in all password fields.');
             return;
+
         }
 
         if (newPassword !== confirmPassword) {
-            setPasswordError('The new passwords do not match.');
+
+            setError('New passwords do not match.');
             return;
+
         }
 
         try {
+
             setPasswordLoading(true);
-            const response = await changePassword({
+
+            await changePassword({
                 currentPassword,
                 newPassword
             });
 
-            setPasswordMessage(response.data.message || 'Password updated successfully.');
             setCurrentPassword('');
             setNewPassword('');
             setConfirmPassword('');
+
+            setMessage('Password changed successfully.');
+
         } catch (err) {
-            console.error('Change password error:', err);
-            setPasswordError(err.response?.data?.message || 'Failed to update your password.');
+
+            console.error('Password change error:', err);
+
+            setError(
+                err.response?.data?.message ||
+                'Unable to change password.'
+            );
+
         } finally {
+
             setPasswordLoading(false);
+
         }
     };
 
-    /* ========================================
-        LOGOUT CONFIRMATION
-    ======================================== */
-    const handleConfirmLogout = () => {
-        setLogoutLoading(true);
-        localStorage.removeItem('token');
-        sessionStorage.clear();
-        navigate('/login');
+    const handleConfirmLogout = async () => {
+
+        try {
+
+            setLogoutLoading(true);
+
+            await logout();
+
+            localStorage.removeItem('token');
+            sessionStorage.clear();
+
+            navigate('/login');
+
+        } catch (err) {
+
+            console.error('Logout error:', err);
+
+            localStorage.removeItem('token');
+            sessionStorage.clear();
+
+            navigate('/login');
+
+        } finally {
+
+            setLogoutLoading(false);
+
+        }
     };
 
     if (loading) {
-        return (
-            <main className="profile-page dashboard-loading-state">
-                <div className="spinner"></div>
-                <p>Loading your profile...</p>
-            </main>
-        );
-    }
 
-    if (error) {
         return (
             <main className="profile-page">
                 <div className="profile-container">
-                    <div className="alert alert-error">{error}</div>
+                    <p>Loading profile...</p>
                 </div>
             </main>
         );
+
     }
 
     return (
-        <main className="profile-page" style={{ position: 'relative', minHeight: '100vh' }}>
+
+        <main className="profile-page">
+
             <div className="profile-container">
 
-                {/* HEADER */}
-                <header className="profile-header">
+                <section className="profile-header">
+
                     <div>
-                        <h1 style={{ color: 'var(--neon-accent)' }}>Account Profile</h1>
-                        <p>Manage your account details and password.</p>
+
+                        <h1>Profile</h1>
+
+                        <p>
+                            Manage your account information and security.
+                        </p>
+
                     </div>
 
-                    <button
-                        type="button"
-                        className="button button-ghost button-small"
-                        onClick={() => navigate('/dashboard')}
-                    >
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="19" y1="12" x2="5" y2="12"></line>
-                            <polyline points="12 19 5 12 12 5"></polyline>
-                        </svg>
-                        Dashboard
-                    </button>
-                </header>
+                </section>
 
-                {/* EDIT PROFILE SECTION */}
+
+                {message && (
+
+                    <div className="profile-message success">
+                        {message}
+                    </div>
+
+                )}
+
+
+                {error && (
+
+                    <div className="profile-message error">
+                        {error}
+                    </div>
+
+                )}
+
+
                 <section className="profile-card">
+
                     <div className="profile-card-header">
+
                         <h2>Personal Information</h2>
-                        <p>Update your username and contact details.</p>
+
+                        <p>
+                            Update your basic account information.
+                        </p>
+
                     </div>
 
-                    <form className="profile-edit-form" onSubmit={handleUpdateProfile}>
-                        <div className="field">
-                            <label htmlFor="username">Username</label>
+
+                    <form onSubmit={handleProfileUpdate}>
+
+                        <div className="profile-form-group">
+
+                            <label htmlFor="name">
+                                Name
+                            </label>
+
                             <input
-                                id="username"
+                                id="name"
                                 type="text"
-                                value={username}
-                                onChange={(event) => setUsername(event.target.value)}
-                                disabled={profileLoading}
+                                value={name}
+                                onChange={(event) =>
+                                    setName(event.target.value)
+                                }
+                                placeholder="Enter your name"
                             />
+
                         </div>
 
-                        <div className="field">
-                            <label htmlFor="email">Email Address</label>
+
+                        <div className="profile-form-group">
+
+                            <label htmlFor="email">
+                                Email
+                            </label>
+
                             <input
                                 id="email"
                                 type="email"
-                                value={user?.email || ''}
+                                value={email}
                                 disabled
                             />
-                            <small className="field-hint">Your email address cannot be changed here.</small>
+
                         </div>
 
-                        <div className="field">
-                            <label htmlFor="phone">Phone Number</label>
-                            <input
-                                id="phone"
-                                type="text"
-                                placeholder="e.g. +1 (555) 019-2834"
-                                value={phone}
-                                onChange={(event) => setPhone(event.target.value)}
-                                disabled={profileLoading}
-                            />
-                        </div>
-
-                        {profileError && (
-                            <div className="alert alert-error">{profileError}</div>
-                        )}
-
-                        {profileMessage && (
-                            <div className="alert alert-success">{profileMessage}</div>
-                        )}
 
                         <button
                             type="submit"
-                            className="button button-primary button-small"
-                            disabled={profileLoading}
+                            disabled={saving}
                         >
-                            {profileLoading ? <span className="spinner"></span> : 'Save Changes'}
+
+                            {saving
+                                ? 'Saving...'
+                                : 'Save Changes'
+                            }
+
                         </button>
+
                     </form>
+
                 </section>
 
-                {/* CHANGE PASSWORD SECTION */}
-                <section className="profile-password-section">
-                    <div className="profile-password-header">
-                        <div>
-                            <h2>Password & Security</h2>
-                            <p>Update your account password.</p>
-                        </div>
 
-                        <button
-                            type="button"
-                            className="button button-ghost button-small"
-                            onClick={() => {
-                                setShowPasswordForm((prev) => !prev);
-                                setPasswordError('');
-                                setPasswordMessage('');
-                            }}
-                        >
-                            {showPasswordForm ? 'Close' : 'Change Password'}
-                        </button>
+                <section className="profile-card">
+
+                    <div className="profile-card-header">
+
+                        <h2>Change Password</h2>
+
+                        <p>
+                            Keep your account secure by using a strong password.
+                        </p>
+
                     </div>
 
-                    {showPasswordForm && (
-                        <form className="profile-password-form" onSubmit={handleChangePassword}>
-                            <div className="field">
-                                <label htmlFor="currentPassword">Current Password</label>
-                                <input
-                                    id="currentPassword"
-                                    type="password"
-                                    placeholder="••••••••••••"
-                                    value={currentPassword}
-                                    onChange={(event) => setCurrentPassword(event.target.value)}
-                                    disabled={passwordLoading}
-                                />
-                            </div>
 
-                            <div className="field">
-                                <label htmlFor="newPassword">New Password</label>
-                                <input
-                                    id="newPassword"
-                                    type="password"
-                                    placeholder="Minimum 6 characters"
-                                    value={newPassword}
-                                    onChange={(event) => setNewPassword(event.target.value)}
-                                    disabled={passwordLoading}
-                                />
-                            </div>
+                    <form onSubmit={handlePasswordChange}>
 
-                            <div className="field">
-                                <label htmlFor="confirmPassword">Confirm New Password</label>
-                                <input
-                                    id="confirmPassword"
-                                    type="password"
-                                    placeholder="Enter your new password again"
-                                    value={confirmPassword}
-                                    onChange={(event) => setConfirmPassword(event.target.value)}
-                                    disabled={passwordLoading}
-                                />
-                            </div>
+                        <div className="profile-form-group">
 
-                            {passwordError && (
-                                <div className="alert alert-error">{passwordError}</div>
-                            )}
+                            <label htmlFor="currentPassword">
+                                Current Password
+                            </label>
 
-                            {passwordMessage && (
-                                <div className="alert alert-success">{passwordMessage}</div>
-                            )}
+                            <input
+                                id="currentPassword"
+                                type="password"
+                                value={currentPassword}
+                                onChange={(event) =>
+                                    setCurrentPassword(event.target.value)
+                                }
+                                placeholder="Enter current password"
+                            />
 
-                            <button
-                                type="submit"
-                                className="button button-primary button-small"
-                                disabled={passwordLoading}
-                            >
-                                {passwordLoading ? <span className="spinner"></span> : 'Update Password'}
-                            </button>
-                        </form>
-                    )}
+                        </div>
+
+
+                        <div className="profile-form-group">
+
+                            <label htmlFor="newPassword">
+                                New Password
+                            </label>
+
+                            <input
+                                id="newPassword"
+                                type="password"
+                                value={newPassword}
+                                onChange={(event) =>
+                                    setNewPassword(event.target.value)
+                                }
+                                placeholder="Enter new password"
+                            />
+
+                        </div>
+
+
+                        <div className="profile-form-group">
+
+                            <label htmlFor="confirmPassword">
+                                Confirm New Password
+                            </label>
+
+                            <input
+                                id="confirmPassword"
+                                type="password"
+                                value={confirmPassword}
+                                onChange={(event) =>
+                                    setConfirmPassword(event.target.value)
+                                }
+                                placeholder="Confirm new password"
+                            />
+
+                        </div>
+
+
+                        <button
+                            type="submit"
+                            disabled={passwordLoading}
+                        >
+
+                            {passwordLoading
+                                ? 'Changing...'
+                                : 'Change Password'
+                            }
+
+                        </button>
+
+                    </form>
+
                 </section>
 
-                {/* LOGOUT SECTION */}
-                <section className="profile-password-section">
-                    <div className="profile-password-header">
-                        <div>
-                            <h2>Sign Out</h2>
-                            <p>Sign out of your MyComm account on this device.</p>
-                        </div>
 
-                        <button
-                            type="button"
-                            className="button button-danger button-small"
-                            onClick={() => setShowLogoutModal(true)}
-                        >
-                            Log Out
-                        </button>
+                <section className="profile-card danger-card">
+
+                    <div className="profile-card-header">
+
+                        <h2>Account</h2>
+
+                        <p>
+                            Sign out of your MyComm account.
+                        </p>
+
                     </div>
+
+
+                    <button
+                        type="button"
+                        className="logout-button"
+                        onClick={() => setShowLogoutModal(true)}
+                    >
+                        Log Out
+                    </button>
+
                 </section>
 
             </div>
 
-            {/* ========================================
-                LOGOUT CONFIRMATION MODAL
-            ======================================== */}
+
             {showLogoutModal && (
-                <div
-                    role="dialog"
-                    aria-modal="true"
-                    onClick={() => {
-                        if (!logoutLoading) setShowLogoutModal(false);
-                    }}
-                    style={{
-                        position: 'fixed',
-                        inset: 0,
-                        backgroundColor: 'rgba(0, 0, 0, 0.82)',
-                        backdropFilter: 'blur(10px)',
-                        WebkitBackdropFilter: 'blur(10px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        padding: '20px',
-                        zIndex: 9999
-                    }}
-                >
-                    <div
-                        onClick={(e) => e.stopPropagation()}
-                        style={{
-                            width: '100%',
-                            maxWidth: '440px',
-                            background: 'linear-gradient(145deg, #131418 0%, #090a0d 100%)',
-                            border: '1px solid rgba(255, 51, 51, 0.35)',
-                            borderRadius: '16px',
-                            padding: '32px 28px',
-                            boxShadow: '0 24px 48px rgba(0, 0, 0, 0.9), 0 0 24px rgba(255, 51, 51, 0.15)',
-                            display: 'flex',
-                            flexDirection: 'column',
-                            alignItems: 'center',
-                            textAlign: 'center',
-                            gap: '18px'
-                        }}
-                    >
-                        {/* Warning Icon Badge */}
-                        <div
-                            style={{
-                                width: '52px',
-                                height: '52px',
-                                borderRadius: '50%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                background: 'rgba(255, 51, 51, 0.12)',
-                                border: '1px solid rgba(255, 51, 51, 0.4)',
-                                color: 'var(--neon-accent, #ff3333)',
-                                boxShadow: '0 0 16px rgba(255, 51, 51, 0.25)'
-                            }}
-                        >
-                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
-                        </div>
 
-                        <div>
-                            <h3
-                                style={{
-                                    fontSize: '20px',
-                                    fontWeight: 700,
-                                    margin: '0 0 8px 0',
-                                    color: '#ffffff',
-                                    letterSpacing: '-0.02em',
-                                    textTransform: 'none'
-                                }}
-                            >
-                                Sign Out?
-                            </h3>
-                            <p
-                                style={{
-                                    fontSize: '13px',
-                                    lineHeight: 1.6,
-                                    color: 'var(--text-secondary, #a1a1aa)',
-                                    margin: 0
-                                }}
-                            >
-                                Are you sure you want to sign out of your account? You will need to log back in to access your workspace.
-                            </p>
-                        </div>
+                <div className="logout-modal-overlay">
 
-                        {/* Action Buttons */}
-                        <div
-                            style={{
-                                display: 'flex',
-                                width: '100%',
-                                gap: '12px',
-                                marginTop: '8px'
-                            }}
-                        >
+                    <div className="logout-modal">
+
+                        <h2>Log out?</h2>
+
+                        <p>
+                            Are you sure you want to log out of your MyComm account?
+                        </p>
+
+
+                        <div className="logout-modal-actions">
+
                             <button
                                 type="button"
                                 onClick={() => setShowLogoutModal(false)}
                                 disabled={logoutLoading}
-                                style={{
-                                    flex: 1,
-                                    padding: '11px 16px',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    background: '#16181f',
-                                    border: '1px solid #282c39',
-                                    color: '#e4e4e7',
-                                    cursor: logoutLoading ? 'not-allowed' : 'pointer',
-                                    transition: 'all 0.2s ease'
-                                }}
                             >
                                 Cancel
                             </button>
 
+
                             <button
                                 type="button"
+                                className="logout-confirm-button"
                                 onClick={handleConfirmLogout}
                                 disabled={logoutLoading}
-                                style={{
-                                    flex: 1,
-                                    padding: '11px 16px',
-                                    borderRadius: '8px',
-                                    fontSize: '13px',
-                                    fontWeight: 600,
-                                    background: 'var(--neon-accent, #ff3333)',
-                                    color: '#ffffff',
-                                    border: 'none',
-                                    boxShadow: '0 0 16px rgba(255, 51, 51, 0.4)',
-                                    cursor: logoutLoading ? 'not-allowed' : 'pointer',
-                                    display: 'inline-flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center',
-                                    gap: '8px',
-                                    transition: 'all 0.2s ease'
-                                }}
                             >
-                                {logoutLoading ? 'Signing out...' : 'Sign Out'}
+
+                                {logoutLoading
+                                    ? 'Logging out...'
+                                    : 'Log Out'
+                                }
+
                             </button>
+
                         </div>
+
                     </div>
+
                 </div>
+
             )}
+
         </main>
+
     );
 }
 

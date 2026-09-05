@@ -25,7 +25,8 @@ function Login() {
         
         setLoading(true);
         try { 
-            await login(form); 
+            const response = await login(form);
+            localStorage.setItem('token', response.data.token);
             navigate('/dashboard'); 
         } catch (requestError) { 
             setError(getApiError(requestError, 'We could not log you in. Please check your email and password.')); 

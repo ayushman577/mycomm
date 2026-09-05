@@ -1,13 +1,19 @@
 import api from './api';
 
 export const getProfile = () => {
-    return api.get('/auth/me');
+
+    return api.get('/api/auth/me');
+
 };
 
 export const updateProfile = (data) => {
-    return api.put('/auth/profile', data);
+
+    return api.put('/api/auth/profile', data);
+
 };
 
 export const changePassword = (data) => {
-    return api.put('/auth/change-password', data);
+
+    return api.put('/api/auth/change-password', data);
+
 };

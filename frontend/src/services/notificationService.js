@@ -1,9 +1,9 @@
 import api from './api';
 
 export const getNotifications = () => {
-    return api.get('/notifications');
+    return api.get('/api/notifications');
 };
 
 export const deleteNotification = (notificationId) => {
-    return api.delete(`/notifications/${notificationId}`);
+    return api.delete(`/api/notifications/${notificationId}`);
 };

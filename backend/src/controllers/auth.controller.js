@@ -99,11 +99,24 @@ async function loginUser(req, res) {
     }
 
     if (!user.emailVerified) {
-        return res.status(400).json({ message: 'Please verify your email before logging in.' });
+        return res.status(400).json({
+            message: 'Please verify your email before logging in.'
+        });
     }
 
-    const token = jwt.sign({ userId: user._id }, process.env.JWT_SECRET, { expiresIn: '1h' });
-    res.cookie('token', token, { httpOnly: true, maxAge: 3600000 }); // Set cookie for 1 hour
+    const token = jwt.sign(
+        { userId: user._id },
+        process.env.JWT_SECRET,
+        { expiresIn: '1h' }
+    );
+
+    res.cookie('token', token, {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none',
+        maxAge: 3600000
+    });
+
     res.json({ token });
 }
 
@@ -134,8 +147,16 @@ async function verifyEmail(req, res) {
 }
 
 async function logoutUser(req, res) {
-    res.clearCookie('token');
-    res.json({ message: 'User logged out successfully' });
+
+    res.clearCookie('token', {
+        httpOnly: true,
+        secure: true,
+        sameSite: 'none'
+    });
+
+    res.json({
+        message: 'Logged out successfully.'
+    });
 }
 
 async function forgotPassword(req, res) {

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
     getAttendance,
@@ -90,6 +90,7 @@ function Attendance() {
         }
 
         const year = value.getFullYear();
+
         const month = String(
             value.getMonth() + 1
         ).padStart(2, '0');
@@ -116,6 +117,7 @@ function Attendance() {
          * We only need the calendar date:
          * 2026-09-06
          */
+
         if (value.includes('T')) {
             const datePart =
                 value.split('T')[0];
@@ -131,6 +133,7 @@ function Attendance() {
         /*
          * Handle YYYY-MM-DD dates.
          */
+
         const parts =
             value.split('-');
 
@@ -141,6 +144,7 @@ function Attendance() {
         /*
          * Fallback for other valid date formats.
          */
+
         const dateObject =
             new Date(dateVal);
 
@@ -312,129 +316,122 @@ function Attendance() {
        LOAD MEMBERS
     ============================================= */
 
-    const loadMembers = useCallback(
-        async () => {
-            try {
-                const response =
-                    await getMembers(
-                        communityId
-                    );
-
-                const loadedMembers =
-                    response?.data?.members ||
-                    response?.data ||
-                    [];
-
-                setMembers(
-                    Array.isArray(
-                        loadedMembers
-                    )
-                        ? loadedMembers
-                        : []
+    const loadMembers = async () => {
+        try {
+            const response =
+                await getMembers(
+                    communityId
                 );
 
-                setCurrentUserRole(
-                    response?.data
-                        ?.currentUserRole ||
-                    response?.data?.role ||
-                    'member'
-                );
+            const loadedMembers =
+                response?.data?.members ||
+                response?.data ||
+                [];
 
-                setRoleLoaded(true);
-            } catch (err) {
-                console.error(
-                    'Failed to load members:',
-                    err
-                );
+            setMembers(
+                Array.isArray(
+                    loadedMembers
+                )
+                    ? loadedMembers
+                    : []
+            );
 
-                setError(
-                    err?.response?.data
-                        ?.message ||
-                    'Failed to load community members.'
-                );
+            setCurrentUserRole(
+                response?.data
+                    ?.currentUserRole ||
+                response?.data?.role ||
+                'member'
+            );
 
-                setRoleLoaded(true);
-            }
-        },
-        [communityId]
-    );
+            setRoleLoaded(true);
+
+        } catch (err) {
+            console.error(
+                'Failed to load members:',
+                err
+            );
+
+            setError(
+                err?.response?.data
+                    ?.message ||
+                'Failed to load community members.'
+            );
+
+            setRoleLoaded(true);
+        }
+    };
 
     /* =========================================
        LOAD ATTENDANCE
     ============================================= */
 
-    const loadAttendance =
-        useCallback(
-            async () => {
-                try {
-                    setLoading(true);
-                    setError('');
+    const loadAttendance = async () => {
+        try {
+            setLoading(true);
+            setError('');
 
-                    const params =
-                        isManager
-                            ? {
-                                type: 'day',
-                                date: selectedDate
-                            }
-                            : {
-                                type: 'month',
-                                year: selectedYear,
-                                month: selectedMonth
-                            };
+            const params =
+                isManager
+                    ? {
+                        type: 'day',
+                        date: selectedDate
+                    }
+                    : {
+                        type: 'month',
+                        year: selectedYear,
+                        month: selectedMonth
+                    };
 
-                    const response =
-                        await getAttendance(
-                            communityId,
-                            params
-                        );
+            const response =
+                await getAttendance(
+                    communityId,
+                    params
+                );
 
-                    const loadedAttendance =
-                        response?.data
-                            ?.attendance ||
-                        response?.data ||
-                        [];
-                        console.log('Attendance response:', response.data);
+            const loadedAttendance =
+                response?.data
+                    ?.attendance ||
+                response?.data ||
+                [];
 
-                    setAttendance(
-                        Array.isArray(
-                            loadedAttendance
-                        )
-                            ? loadedAttendance
-                            : []
-                    );
+            console.log(
+                'Attendance response:',
+                response.data
+            );
 
-                    setCurrentUserRole(
-                        response?.data
-                            ?.currentUserRole ||
-                        response?.data?.role ||
-                        currentUserRole
-                    );
-                } catch (err) {
-                    console.error(
-                        'Failed to load attendance:',
-                        err
-                    );
+            setAttendance(
+                Array.isArray(
+                    loadedAttendance
+                )
+                    ? loadedAttendance
+                    : []
+            );
 
-                    setAttendance([]);
-
-                    setError(
-                        err?.response?.data
-                            ?.message ||
-                        'Failed to load attendance records.'
-                    );
-                } finally {
-                    setLoading(false);
-                }
-            },
-            [
-                communityId,
-                isManager,
-                selectedDate,
-                selectedMonth,
-                selectedYear,
+            setCurrentUserRole(
+                response?.data
+                    ?.currentUserRole ||
+                response?.data?.role ||
                 currentUserRole
-            ]
-        );
+            );
+
+        } catch (err) {
+            console.error(
+                'Failed to load attendance:',
+                err
+            );
+
+            setAttendance([]);
+
+            setError(
+                err?.response?.data
+                    ?.message ||
+                'Failed to load attendance records.'
+            );
+
+        } finally {
+            setLoading(false);
+        }
+    };
 
     /* =========================================
        INITIAL DATA LOAD
@@ -444,10 +441,7 @@ function Attendance() {
         if (communityId) {
             loadMembers();
         }
-    }, [
-        communityId,
-        loadMembers
-    ]);
+    }, [communityId]);
 
     useEffect(() => {
         if (communityId && roleLoaded) {
@@ -456,7 +450,10 @@ function Attendance() {
     }, [
         communityId,
         roleLoaded,
-        loadAttendance
+        isManager,
+        selectedDate,
+        selectedMonth,
+        selectedYear
     ]);
 
     /* =========================================
@@ -611,7 +608,7 @@ function Attendance() {
 
        No attendance:
          ''
-    ========================================= */
+    ============================================= */
 
     useEffect(() => {
         if (!isManager) {
@@ -631,7 +628,7 @@ function Attendance() {
 
                 const existingRecord =
                     attendanceMap[
-                    memberId
+                        memberId
                     ];
 
                 form[memberId] =
@@ -642,6 +639,7 @@ function Attendance() {
 
         setAttendanceForm(form);
         setFormInitialized(true);
+
     }, [
         isManager,
         eligibleMembers,
@@ -694,7 +692,7 @@ function Attendance() {
 
        Only explicitly selected members
        are sent to the backend.
-    ========================================= */
+    ============================================= */
 
     const handleSaveAttendance =
         async () => {
@@ -747,6 +745,7 @@ function Attendance() {
                 setSaveModalError(
                     'Please select Present or Absent for at least one member.'
                 );
+
                 setSaveModalSuccess(false);
                 setShowSaveModal(true);
 
@@ -776,6 +775,7 @@ function Attendance() {
                  * This keeps the UI in sync
                  * with the saved records.
                  */
+
                 await loadAttendance();
 
                 setSaveModalSuccess(true);
@@ -882,6 +882,7 @@ function Attendance() {
                             a.date
                         ).getTime()
                 );
+
         }, [
             attendance,
             members,
@@ -923,6 +924,7 @@ function Attendance() {
                                 strokeLinecap="round"
                                 strokeLinejoin="round"
                             >
+
                                 <line
                                     x1="19"
                                     y1="12"
@@ -933,6 +935,7 @@ function Attendance() {
                                 <polyline
                                     points="12 19 5 12 12 5"
                                 />
+
                             </svg>
 
                             Community Dashboard
@@ -941,15 +944,13 @@ function Attendance() {
 
                         <div className="workspace-badge-row">
 
-                            {/* <span className="community-role">
-                                Attendance
-                            </span> */}
-
                         </div>
 
-                        <h1 style={{
-                            textTransform: 'none'
-                        }} >
+                        <h1
+                            style={{
+                                textTransform: 'none'
+                            }}
+                        >
                             Attendance
                         </h1>
 
@@ -1230,12 +1231,12 @@ function Attendance() {
                                                     letterSpacing: '0.02em'
                                                 }}
                                             >
-                                                
+
                                                 {record.status ===
                                                     'present'
                                                     ? 'Present'
                                                     : 'Absent'}
-                                                
+
                                             </span>
 
                                         </article>
@@ -1596,6 +1597,7 @@ function Attendance() {
                                                  * attendance has been
                                                  * selected yet.
                                                  */
+
                                                 const status =
                                                     attendanceForm[
                                                     memberId
@@ -1784,6 +1786,7 @@ function Attendance() {
                             zIndex: 9999
                         }}
                     >
+
                         <div
                             onClick={(e) => e.stopPropagation()}
                             style={{
@@ -1810,8 +1813,10 @@ function Attendance() {
                                 gap: '14px'
                             }}
                         >
+
                             {saving ? (
                                 <>
+
                                     <div
                                         style={{
                                             width: '52px',
@@ -1850,6 +1855,7 @@ function Attendance() {
                                         }}
                                     >
                                         Synchronizing records for{' '}
+
                                         <span
                                             style={{
                                                 color: 'var(--neon-accent, #ff3333)',
@@ -1858,11 +1864,16 @@ function Attendance() {
                                         >
                                             {formatDisplayDate(selectedDate)}
                                         </span>
+
                                         ...
                                     </p>
+
                                 </>
+
                             ) : saveModalSuccess ? (
+
                                 <>
+
                                     <div
                                         style={{
                                             width: '52px',
@@ -1906,9 +1917,13 @@ function Attendance() {
                                     >
                                         Attendance has been successfully recorded.
                                     </p>
+
                                 </>
+
                             ) : saveModalError ? (
+
                                 <>
+
                                     <div
                                         style={{
                                             width: '52px',
@@ -1953,7 +1968,13 @@ function Attendance() {
                                         {saveModalError}
                                     </p>
 
-                                    <div style={{ width: '100%', marginTop: '10px' }}>
+                                    <div
+                                        style={{
+                                            width: '100%',
+                                            marginTop: '10px'
+                                        }}
+                                    >
+
                                         <button
                                             type="button"
                                             onClick={() => {
@@ -1976,14 +1997,20 @@ function Attendance() {
                                         >
                                             Dismiss
                                         </button>
+
                                     </div>
+
                                 </>
+
                             ) : null}
+
                         </div>
+
                     </div>
                 )}
 
             </div>
+
         </main>
     );
 }

@@ -1,24 +1,24 @@
 import api from './api';
 
-export const getMyCommunities = () => api.get('/community/my');
+export const getMyCommunities = () => api.get('/api/community/my');
 
 export const createCommunity = (payload) =>
-    api.post('/community/create', payload);
+    api.post('/api/community/create', payload);
 
 export const joinCommunity = (payload) =>
-    api.post('/community/join', payload);
+    api.post('/api/community/join', payload);
 
 export const getCommunity = (communityId) => {
-    return api.get(`/community/${communityId}`);
+    return api.get(`/api/community/${communityId}`);
 };
 
 export const getAnnouncements = (communityId) => {
-    return api.get(`/community/${communityId}/announcements`);
+    return api.get(`/api/community/${communityId}/announcements`);
 };
 
 export const addAnnouncement = (communityId, data) => {
     return api.post(
-        `/community/${communityId}/announcements`,
+        `/api/community/${communityId}/announcements`,
         data
     );
 };
@@ -29,24 +29,24 @@ export const updateAnnouncement = (
     data
 ) => {
     return api.put(
-        `/community/${communityId}/announcements/${announcementId}`,
+        `/api/community/${communityId}/announcements/${announcementId}`,
         data
     );
 };
 
 export const deleteAnnouncement = (communityId, announcementId) => {
     return api.delete(
-        `/community/${communityId}/announcements/${announcementId}`
+        `/api/community/${communityId}/announcements/${announcementId}`
     );
 };
 
 export const getEvents = (communityId) => {
-    return api.get(`/community/${communityId}/events`);
+    return api.get(`/api/community/${communityId}/events`);
 };
 
 export const addEvent = (communityId, data) => {
     return api.post(
-        `/community/${communityId}/events`,
+        `/api/community/${communityId}/events`,
         data
     );
 };
@@ -57,7 +57,7 @@ export const updateEvent = (
     data
 ) => {
     return api.put(
-        `/community/${communityId}/events/${eventId}`,
+        `/api/community/${communityId}/events/${eventId}`,
         data
     );
 };
@@ -67,34 +67,35 @@ export const deleteEvent = (
     eventId
 ) => {
     return api.delete(
-        `/community/${communityId}/events/${eventId}`
+        `/api/community/${communityId}/events/${eventId}`
     );
 };
+
 export const getMembers = (communityId) => {
-    return api.get(`/community/${communityId}/members`);
+    return api.get(`/api/community/${communityId}/members`);
 };
 
 export const promoteMember = (communityId, memberId) => {
     return api.put(
-        `/community/${communityId}/members/${memberId}/promote`
+        `/api/community/${communityId}/members/${memberId}/promote`
     );
 };
 
 export const makeOwner = (communityId, memberId) => {
     return api.put(
-        `/community/${communityId}/members/${memberId}/make-owner`
+        `/api/community/${communityId}/members/${memberId}/make-owner`
     );
 };
 
 export const removeMember = (communityId, memberId) => {
     return api.delete(
-        `/community/${communityId}/members/${memberId}`
+        `/api/community/${communityId}/members/${memberId}`
     );
 };
 
 export const demoteMember = (communityId, memberId) => {
     return api.put(
-        `/community/${communityId}/members/${memberId}/demote`
+        `/api/community/${communityId}/members/${memberId}/demote`
     );
 };
 
@@ -107,7 +108,7 @@ export const getAttendance = (
     params = {}
 ) => {
     return api.get(
-        `/community/${communityId}/attendance`,
+        `/api/community/${communityId}/attendance`,
         {
             params
         }
@@ -119,7 +120,7 @@ export const takeAttendance = (
     data
 ) => {
     return api.post(
-        `/community/${communityId}/attendance`,
+        `/api/community/${communityId}/attendance`,
         data
     );
 };
@@ -130,7 +131,7 @@ export const editAttendance = (
     data
 ) => {
     return api.put(
-        `/community/${communityId}/attendance/${attendanceId}`,
+        `/api/community/${communityId}/attendance/${attendanceId}`,
         data
     );
 };
@@ -143,6 +144,6 @@ export const leaveCommunity = (
     communityId
 ) => {
     return api.delete(
-        `/community/${communityId}/leave`
+        `/api/community/${communityId}/leave`
     );
 };
