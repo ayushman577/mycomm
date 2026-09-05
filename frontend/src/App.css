@@ -1106,11 +1106,341 @@ select option { background: var(--bg-base); color: var(--text-primary); }
     box-shadow: var(--neon-glow-subtle);
     font-variant-numeric: tabular-nums; /* stops the badge width jittering as the count changes */
 }
-
 /* -------------------------------------------------------------
    13. PROFILE & NOTIFICATIONS (account) PAGES
 ------------------------------------------------------------- */
-.profile-container,
+
+/* =============================================================
+   PROFILE PAGE
+============================================================= */
+
+.profile-page {
+    min-height: 100vh;
+    width: 100%;
+    padding: 48px 24px;
+    display: flex;
+    justify-content: center;
+    background: var(--bg-base);
+    font-family: var(--font-body);
+    overflow-x: hidden;
+}
+
+.profile-container {
+    width: 100%;
+    max-width: 680px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+}
+
+/* =============================================================
+   PROFILE HEADER
+============================================================= */
+
+.profile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.profile-header h1 {
+    font-size: 26px;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    text-transform: none;
+}
+
+.profile-header p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+}
+
+/* =============================================================
+   PROFILE MESSAGES
+============================================================= */
+
+.profile-message {
+    width: 100%;
+    padding: 14px 16px;
+    border-radius: var(--radius-md);
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.profile-message.success {
+    color: #2ecc71;
+    background: rgba(46, 204, 113, 0.08);
+    border: 1px solid rgba(46, 204, 113, 0.25);
+}
+
+.profile-message.error {
+    color: var(--neon-accent);
+    background: var(--neon-accent-soft-bg);
+    border: 1px solid var(--neon-accent-soft-border);
+}
+
+/* =============================================================
+   PROFILE CARDS
+============================================================= */
+
+.profile-card {
+    width: 100%;
+    padding: 32px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    background: var(--card-gradient);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+}
+
+.profile-card-header {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 4px;
+}
+
+.profile-card-header h2 {
+    font-size: 18px;
+    color: var(--text-primary);
+    margin: 0;
+    text-transform: none;
+}
+
+.profile-card-header p {
+    color: var(--text-secondary);
+    font-size: 12px;
+    margin: 0;
+    line-height: 1.5;
+}
+
+/* =============================================================
+   PROFILE FORMS
+============================================================= */
+
+.profile-card form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.profile-form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    width: 100%;
+}
+
+.profile-form-group label {
+    color: var(--text-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.profile-form-group input {
+    width: 100%;
+    min-height: 44px;
+    padding: 0 14px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.025);
+    color: var(--text-primary);
+    font-family: var(--font-body);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.25s ease;
+    box-sizing: border-box;
+}
+
+.profile-form-group input::placeholder {
+    color: var(--text-muted);
+}
+
+.profile-form-group input:focus {
+    border-color: var(--neon-accent);
+    box-shadow: 0 0 0 3px var(--neon-accent-soft-bg);
+}
+
+.profile-form-group input:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    background: rgba(255, 255, 255, 0.015);
+}
+
+/* =============================================================
+   PROFILE FORM BUTTONS
+============================================================= */
+
+.profile-card form button {
+    display: inline-flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-md);
+    background: var(--text-primary);
+    color: var(--bg-base);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.profile-card form button:hover:not(:disabled) {
+    background: var(--neon-accent);
+    color: var(--text-primary);
+    box-shadow: var(--neon-glow);
+    transform: translateY(-1px);
+}
+
+.profile-card form button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* =============================================================
+   DANGER / ACCOUNT CARD
+============================================================= */
+
+.danger-card {
+    border-color: rgba(255, 60, 60, 0.22);
+}
+
+.danger-card .profile-card-header {
+    margin-bottom: 20px;
+}
+
+.logout-button {
+    display: inline-flex;
+    width: 100%;
+    min-height: 44px;
+    align-items: center;
+    justify-content: center;
+    padding: 0 20px;
+    border: 1px solid rgba(255, 60, 60, 0.35);
+    border-radius: var(--radius-md);
+    background: rgba(255, 60, 60, 0.06);
+    color: var(--neon-accent);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.logout-button:hover {
+    background: var(--neon-accent);
+    color: var(--text-primary);
+    border-color: var(--neon-accent);
+    box-shadow: var(--neon-glow);
+    transform: translateY(-1px);
+}
+
+/* =============================================================
+   LOGOUT MODAL
+============================================================= */
+
+.logout-modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.logout-modal {
+    width: 100%;
+    max-width: 400px;
+    padding: 30px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    background: var(--card-gradient);
+    box-shadow: 0 24px 60px rgba(0, 0, 0, 0.7);
+}
+
+.logout-modal h2 {
+    margin: 0 0 8px 0;
+    color: var(--text-primary);
+    font-size: 20px;
+    text-transform: none;
+}
+
+.logout-modal p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 13px;
+    line-height: 1.6;
+}
+
+.logout-modal-actions {
+    display: flex;
+    gap: 12px;
+    margin-top: 28px;
+}
+
+.logout-modal-actions button {
+    flex: 1;
+    min-height: 42px;
+    padding: 0 16px;
+    border-radius: var(--radius-md);
+    font-family: var(--font-body);
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    cursor: pointer;
+    transition: all 0.25s ease;
+}
+
+.logout-modal-actions button:first-child {
+    border: 1px solid var(--border-light);
+    background: transparent;
+    color: var(--text-secondary);
+}
+
+.logout-modal-actions button:first-child:hover:not(:disabled) {
+    border-color: var(--text-secondary);
+    color: var(--text-primary);
+}
+
+.logout-confirm-button {
+    border: 1px solid var(--neon-accent);
+    background: var(--neon-accent);
+    color: var(--text-primary);
+}
+
+.logout-confirm-button:hover:not(:disabled) {
+    box-shadow: var(--neon-glow);
+    transform: translateY(-1px);
+}
+
+.logout-modal-actions button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+/* =============================================================
+   NOTIFICATIONS
+============================================================= */
+
 .notifications-container {
     width: 100%;
     max-width: 680px;
@@ -1119,7 +1449,6 @@ select option { background: var(--bg-base); color: var(--text-primary); }
     gap: 28px;
 }
 
-.profile-header,
 .notifications-header {
     display: flex;
     justify-content: space-between;
@@ -1129,81 +1458,24 @@ select option { background: var(--bg-base); color: var(--text-primary); }
     border-bottom: 1px solid var(--border-light);
 }
 
-.profile-header h1, .notifications-header h1 { font-size: 26px; color: var(--text-primary); margin-bottom: 4px; text-transform: none; }
-.profile-header p, .notifications-header p { color: var(--text-secondary); font-size: 13px; }
-
-.profile-card,
-.profile-password-section {
-    padding: 32px;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-lg);
-    background: var(--card-gradient);
-    box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+.notifications-header h1 {
+    font-size: 26px;
+    color: var(--text-primary);
+    margin: 0 0 4px 0;
+    text-transform: none;
 }
 
-.profile-card-header,
-.profile-password-header {
+.notifications-header p {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin: 0;
+}
+
+.notifications-list {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 24px;
+    flex-direction: column;
     gap: 16px;
 }
-
-.profile-card-header h2, .profile-password-header h2 { font-size: 18px; color: var(--text-primary); margin-bottom: 4px; text-transform: none; }
-.profile-card-header p, .profile-password-header p { color: var(--text-secondary); font-size: 12px; }
-
-.profile-edit-form, .profile-password-form { display: flex; flex-direction: column; gap: 20px; }
-
-.profile-save-button, .profile-save-password {
-    display: inline-flex;
-    min-height: 44px;
-    width: 100%;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 0 20px;
-    border: 1px solid transparent;
-    border-radius: var(--radius-md);
-    background: var(--text-primary);
-    color: var(--bg-base);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all 0.3s ease;
-}
-
-.profile-save-button:hover:not(:disabled), .profile-save-password:hover:not(:disabled) {
-    background: var(--neon-accent);
-    color: var(--text-primary);
-    box-shadow: var(--neon-glow);
-    transform: translateY(-1px);
-}
-
-.profile-save-button:disabled, .profile-save-password:disabled { cursor: not-allowed; opacity: 0.5; }
-
-.profile-password-toggle {
-    display: inline-flex;
-    min-height: 44px;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 0 20px;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    background: transparent;
-    color: var(--text-secondary);
-    font-size: 11px;
-    font-weight: 800;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    transition: all 0.3s ease;
-}
-
-.profile-password-toggle:hover { border-color: var(--neon-accent); color: var(--neon-accent); background: var(--neon-accent-soft-bg); }
-
-.notifications-list { display: flex; flex-direction: column; gap: 16px; }
 
 .notification-card {
     display: flex;
@@ -1219,14 +1491,22 @@ select option { background: var(--bg-base); color: var(--text-primary); }
     transition: all 0.3s ease;
 }
 
-.notification-card:hover, .notification-card:focus-visible {
+.notification-card:hover,
+.notification-card:focus-visible {
     border-color: var(--neon-accent);
     background: var(--card-hover-gradient);
     transform: translateY(-2px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.4), var(--neon-glow-subtle);
+    box-shadow:
+        0 12px 24px rgba(0, 0, 0, 0.4),
+        var(--neon-glow-subtle);
 }
 
-.notification-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.notification-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
 
 .notification-type-badge {
     padding: 3px 8px;
@@ -1248,8 +1528,19 @@ select option { background: var(--bg-base); color: var(--text-primary); }
     letter-spacing: 0.05em;
 }
 
-.notification-card h2 { font-size: 16px; color: var(--text-primary); margin-bottom: 8px; text-transform: none; }
-.notification-card p { font-size: 13px; color: var(--text-muted); line-height: 1.6; margin: 0 0 16px 0; }
+.notification-card h2 {
+    font-size: 16px;
+    color: var(--text-primary);
+    margin-bottom: 8px;
+    text-transform: none;
+}
+
+.notification-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    margin: 0 0 16px 0;
+}
 
 .notification-card-footer,
 .notification-open {
@@ -1267,10 +1558,48 @@ select option { background: var(--bg-base); color: var(--text-primary); }
     transition: all 0.3s ease;
 }
 
-.notification-open { margin-top: 0; padding-top: 0; border-top: none; }
-.notification-card:hover .notification-card-footer { color: var(--neon-accent); }
+.notification-open {
+    margin-top: 0;
+    padding-top: 0;
+    border-top: none;
+}
 
-/* -------------------------------------------------------------
+.notification-card:hover .notification-card-footer {
+    color: var(--neon-accent);
+}
+
+/* =============================================================
+   RESPONSIVE
+============================================================= */
+
+@media (max-width: 640px) {
+
+    .profile-page {
+        padding: 32px 16px;
+    }
+
+    .profile-card {
+        padding: 24px;
+    }
+
+    .profile-header {
+        align-items: flex-start;
+    }
+
+    .profile-header h1,
+    .notifications-header h1 {
+        font-size: 23px;
+    }
+
+    .logout-modal {
+        padding: 24px;
+    }
+
+    .logout-modal-actions {
+        flex-direction: column-reverse;
+    }
+
+}* -------------------------------------------------------------
    14. COMMUNITY DASHBOARD (single workspace)
 ------------------------------------------------------------- */
 .community-dashboard-container {
