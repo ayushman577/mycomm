@@ -19,6 +19,9 @@ app.use(express.json());
 
 const allowedOrigins = [
     'http://localhost:5173',
+    'http://localhost:5174',
+    'http://127.0.0.1:5173',
+    'http://127.0.0.1:5174',
     process.env.FRONTEND_URL
 ].filter(Boolean);
 
@@ -27,6 +30,7 @@ app.use(cors({
         if (!origin || allowedOrigins.includes(origin)) {
             callback(null, true);
         } else {
+            console.log('❌ CORS BLOCKED:', origin);
             callback(new Error('Not allowed by CORS'));
         }
     },
