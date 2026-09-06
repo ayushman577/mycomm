@@ -10,13 +10,13 @@ const transporter = nodemailer.createTransport({
     },
 });
 
-const sendOTPEmail = async (email, otp) => {
+cconst sendOTPEmail = async (email, otp) => {
     try {
         const mailOptions = {
             from: process.env.EMAIL_USER,
             to: email,
             subject: "Your OTP Code",
-            html: `YOUR EXISTING HTML HERE`
+            html: `YOUR EXISTING HTML`
         };
 
         const info = await transporter.sendMail(mailOptions);
