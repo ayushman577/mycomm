@@ -14,6 +14,7 @@ import Announcements from './pages/Announcements';
 import Events from './pages/Events';
 import Members from './pages/Members';
 import Attendance from './pages/Attendance';
+import NotFound from './pages/NotFound';
 
 function App() {
   return <BrowserRouter><Routes>
@@ -25,12 +26,15 @@ function App() {
     <Route path="/reset-password" element={<ResetPassword />} />
     <Route path="/dashboard" element={<Dashboard />} />
     <Route path="/notifications" element={<Notifications />} />
-    <Route path="/profile" element={<Profile/>}/>
-    <Route path="/community/:communityId" element={<CommunityDashboard/>}/>
-    <Route path="/community/:communityId/announcements" element={<Announcements />}/>
+    <Route path="/profile" element={<Profile />} />
+    <Route path="/community/:communityId" element={<CommunityDashboard />} />
+    <Route path="/community/:communityId/announcements" element={<Announcements />} />
     <Route path="/community/:communityId/events" element={<Events />} />
     <Route path="/community/:communityId/members" element={<Members />} />
     <Route path="/community/:communityId/attendance" element={<Attendance />} />
+    <Route path="*" element={<NotFound />} />
+
+
 
   </Routes></BrowserRouter>;
 }

@@ -156,6 +156,7 @@ function Profile() {
         }
     };
 
+
     const handleConfirmLogout = async () => {
 
         try {
@@ -164,26 +165,22 @@ function Profile() {
 
             await logout();
 
-            localStorage.removeItem('token');
-            sessionStorage.clear();
-
-            navigate('/login');
-
         } catch (err) {
 
             console.error('Logout error:', err);
 
-            localStorage.removeItem('token');
-            sessionStorage.clear();
-
-            navigate('/login');
-
         } finally {
 
+            localStorage.removeItem('token');
+            sessionStorage.clear();
+            setShowLogoutModal(false);
             setLogoutLoading(false);
 
+            navigate('/login');
         }
     };
+
+
 
     if (loading) {
         return (
