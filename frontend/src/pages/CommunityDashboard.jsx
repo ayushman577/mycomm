@@ -334,14 +334,99 @@ function CommunityDashboard() {
         });
     };
 
+    const renderEventDescription = (message) => {
+        if (!message) return null;
+
+        const urlRegex = /https?:\/\/[^\s]+/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = urlRegex.exec(message)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(
+                    <span key={`text-${lastIndex}`}>
+                        {message.slice(lastIndex, match.index)}
+                    </span>
+                );
+            }
+
+            parts.push(
+                <a
+                    key={`link-${match.index}`}
+                    href={match[0]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: 'var(--neon-accent)',
+                        textDecoration: 'underline',
+                        cursor: 'pointer'
+                    }}
+                >
+                    {match[0]}
+                </a>
+            );
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        if (lastIndex < message.length) {
+            parts.push(
+                <span key={`text-${lastIndex}`}>
+                    {message.slice(lastIndex)}
+                </span>
+            );
+        }
+
+        return parts.length > 0 ? parts : message;
+    };
+
     if (loading) {
-        return (
-            <main className="community-dashboard-page dashboard-loading-state">
-                <div className="spinner"></div>
-                <p>Loading community...</p>
-            </main>
-        );
-    }
+  return (
+    <main
+      className="community-dashboard-page dashboard-loading-state"
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        position: 'fixed',
+        inset: 0,
+        zIndex: 9999
+      }}
+    >
+      <style>{`
+        @keyframes miniPulse {
+          0%, 100% {
+            opacity: 0.25;
+            transform: scale(0.75);
+            box-shadow: none;
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.35);
+            box-shadow: 0 0 10px var(--neon-accent), 0 0 20px var(--neon-accent);
+          }
+        }
+      `}</style>
+
+      <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        {[0, 0.16, 0.32].map((delay, i) => (
+          <div
+            key={i}
+            style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              backgroundColor: 'var(--neon-accent)',
+              animation: 'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+              animationDelay: `${delay}s`
+            }}
+          />
+        ))}
+      </div>
+    </main>
+  );
+}
 
     if (error || !community) {
         return (
@@ -368,6 +453,56 @@ function CommunityDashboard() {
 
     const nextEvent = findNearestEvent();
     const nextEventIsPast = nextEvent && getEventTimestamp(nextEvent) < Date.now();
+
+    const renderAnnouncementMessage = (message) => {
+        if (!message) return null;
+
+        const urlPattern = /https?:\/\/[^\s]+/g;
+        const elements = [];
+        let lastIndex = 0;
+
+        message.replace(urlPattern, (url, offset) => {
+            // Text before the URL
+            if (offset > lastIndex) {
+                elements.push(
+                    <span key={`text-${lastIndex}`}>
+                        {message.substring(lastIndex, offset)}
+                    </span>
+                );
+            }
+
+            // URL
+            elements.push(
+                <a
+                    key={`url-${offset}`}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: 'var(--neon-accent)',
+                        textDecoration: 'underline'
+                    }}
+                >
+                    {url}
+                </a>
+            );
+
+            lastIndex = offset + url.length;
+
+            return url;
+        });
+
+        // Text after the last URL
+        if (lastIndex < message.length) {
+            elements.push(
+                <span key={`text-${lastIndex}`}>
+                    {message.substring(lastIndex)}
+                </span>
+            );
+        }
+
+        return elements;
+    };
 
     return (
         <main className="community-dashboard-page">
@@ -438,7 +573,9 @@ function CommunityDashboard() {
                         ) : (
                             <article className="announcement-item-preview">
                                 <h3>{latestAnnouncement.title}</h3>
-                                <p>{latestAnnouncement.message}</p>
+                                <p style={{ whiteSpace: 'pre-wrap' }}>
+                                    {renderAnnouncementMessage(latestAnnouncement.message)}
+                                </p>
                                 <div className="announcement-meta">
                                     <span>{latestAnnouncement.createdBy?.username || 'Community Administrator'}</span>
                                     <span style={{
@@ -494,8 +631,13 @@ function CommunityDashboard() {
                                         <h3>{nextEvent.name}</h3>
                                         {nextEventIsPast && <span className="event-past-badge">Archived</span>}
                                     </div>
-                                    <p className="event-preview-description">
-                                        {nextEvent.description || 'No event description available.'}
+                                    <p
+                                        className="event-preview-description"
+                                        style={{ whiteSpace: 'pre-wrap' }}
+                                    >
+                                        {renderEventDescription(
+                                            nextEvent.description || 'No event description available.'
+                                        )}
                                     </p>
                                 </div>
                                 <div className="event-preview-meta">
@@ -647,11 +789,10 @@ function CommunityDashboard() {
                                 width: '100%',
                                 maxWidth: '440px',
                                 background: 'linear-gradient(145deg, #131418 0%, #090a0d 100%)',
-                                border: `1px solid ${
-                                    leaveSuccess
-                                        ? 'rgba(46, 204, 113, 0.4)'
-                                        : 'rgba(255, 51, 51, 0.35)'
-                                }`,
+                                border: `1px solid ${leaveSuccess
+                                    ? 'rgba(46, 204, 113, 0.4)'
+                                    : 'rgba(255, 51, 51, 0.35)'
+                                    }`,
                                 borderRadius: '16px',
                                 padding: '32px 28px',
                                 boxShadow: leaveSuccess
@@ -676,11 +817,10 @@ function CommunityDashboard() {
                                     background: leaveSuccess
                                         ? 'rgba(46, 204, 113, 0.12)'
                                         : 'rgba(255, 51, 51, 0.12)',
-                                    border: `1px solid ${
-                                        leaveSuccess
-                                            ? 'rgba(46, 204, 113, 0.4)'
-                                            : 'rgba(255, 51, 51, 0.4)'
-                                    }`,
+                                    border: `1px solid ${leaveSuccess
+                                        ? 'rgba(46, 204, 113, 0.4)'
+                                        : 'rgba(255, 51, 51, 0.4)'
+                                        }`,
                                     color: leaveSuccess ? '#2ecc71' : 'var(--neon-accent, #ff3333)',
                                     fontSize: '22px',
                                     fontWeight: '700',

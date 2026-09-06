@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
     getAttendance,
     getMembers,
+    getCommunity,
     takeAttendance
 } from '../services/communityService';
 
@@ -17,6 +18,7 @@ function Attendance() {
     ============================================= */
 
     const [members, setMembers] = useState([]);
+    const [community, setCommunity] = useState(null);
     const [attendance, setAttendance] = useState([]);
     const [currentUserRole, setCurrentUserRole] = useState('member');
     const [roleLoaded, setRoleLoaded] = useState(false);
@@ -172,6 +174,26 @@ function Attendance() {
         return `${day}/${month}/${year}`;
     }
 
+    function formatSelectedDate(dateVal) {
+        if (!dateVal) {
+            return '';
+        }
+
+        const [year, month, day] = dateVal
+            .split('-')
+            .map(Number);
+
+        const value = new Date(year, month - 1, day);
+
+        if (Number.isNaN(value.getTime())) {
+            return '';
+        }
+
+        return `${String(day).padStart(2, '0')} ${value.toLocaleString('en-GB', {
+            month: 'short'
+        })}, ${year}`;
+    }
+
     /* =========================================
        MONTH OPTIONS
     ============================================= */
@@ -313,19 +335,22 @@ function Attendance() {
     };
 
     /* =========================================
-       LOAD MEMBERS
+       LOAD MEMBERS & COMMUNITY
     ============================================= */
 
     const loadMembers = async () => {
         try {
-            const response =
-                await getMembers(
-                    communityId
-                );
+            const [
+                membersResponse,
+                communityResponse
+            ] = await Promise.all([
+                getMembers(communityId),
+                getCommunity(communityId)
+            ]);
 
             const loadedMembers =
-                response?.data?.members ||
-                response?.data ||
+                membersResponse?.data?.members ||
+                membersResponse?.data ||
                 [];
 
             setMembers(
@@ -337,10 +362,16 @@ function Attendance() {
             );
 
             setCurrentUserRole(
-                response?.data
+                membersResponse?.data
                     ?.currentUserRole ||
-                response?.data?.role ||
+                membersResponse?.data?.role ||
                 'member'
+            );
+
+            setCommunity(
+                communityResponse?.data?.community ||
+                communityResponse?.data ||
+                null
             );
 
             setRoleLoaded(true);
@@ -628,7 +659,7 @@ function Attendance() {
 
                 const existingRecord =
                     attendanceMap[
-                        memberId
+                    memberId
                     ];
 
                 form[memberId] =
@@ -889,6 +920,67 @@ function Attendance() {
             isManager
         ]);
 
+    /* =========================================
+       LOADING
+    ============================================= */
+
+    if (loading) {
+        return (
+            <main
+                className="community-dashboard-page dashboard-loading-state"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999
+                }}
+            >
+                <style>{`
+                    @keyframes miniPulse {
+                        0%, 100% {
+                            opacity: 0.25;
+                            transform: scale(0.75);
+                            box-shadow: none;
+                        }
+
+                        50% {
+                            opacity: 1;
+                            transform: scale(1.35);
+                            box-shadow:
+                                0 0 10px var(--neon-accent),
+                                0 0 20px var(--neon-accent);
+                        }
+                    }
+                `}</style>
+
+                <div
+                    style={{
+                        display: 'flex',
+                        gap: '12px',
+                        alignItems: 'center'
+                    }}
+                >
+                    {[0, 0.16, 0.32].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--neon-accent)',
+                                animation:
+                                    'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                animationDelay: `${delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
+            </main>
+        );
+    }
+
     return (
         <main className="attendance-page">
 
@@ -898,59 +990,19 @@ function Attendance() {
                    HEADER
                 ========================================= */}
 
-                <header className="attendance-header">
+                <header className="announcements-header">
 
                     <div>
 
-                        <button
-                            type="button"
-                            className="button button-ghost button-small"
-                            onClick={() =>
-                                navigate(`/community/${communityId}`)
-                            }
-                            style={{
-                                marginBottom:
-                                    '16px'
-                            }}
-                        >
-
-                            <svg
-                                width="14"
-                                height="14"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2.5"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                            >
-
-                                <line
-                                    x1="19"
-                                    y1="12"
-                                    x2="5"
-                                    y2="12"
-                                />
-
-                                <polyline
-                                    points="12 19 5 12 12 5"
-                                />
-
-                            </svg>
-
-                            Community Dashboard
-
-                        </button>
-
                         <div className="workspace-badge-row">
+
+                            <span className="community-role">
+                                {community?.name || 'Community'}
+                            </span>
 
                         </div>
 
-                        <h1
-                            style={{
-                                textTransform: 'none'
-                            }}
-                        >
+                        <h1 style={{ textTransform: 'none' }}>
                             Attendance
                         </h1>
 
@@ -962,27 +1014,41 @@ function Attendance() {
 
                     </div>
 
-                    <div className="attendance-count-badge">
+                    <button
+                        type="button"
+                        className="button button-ghost button-small"
+                        onClick={() =>
+                            navigate(`/community/${communityId}`)
+                        }
+                    >
 
-                        <strong>
-                            {isManager
-                                ? eligibleMembers.length
-                                : members.length}
-                        </strong>
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
 
-                        <span>
-                            {isManager
-                                ? eligibleMembers.length ===
-                                    1
-                                    ? 'Eligible Member'
-                                    : 'Eligible Members'
-                                : members.length ===
-                                    1
-                                    ? 'Member'
-                                    : 'Members'}
-                        </span>
+                            <line
+                                x1="19"
+                                y1="12"
+                                x2="5"
+                                y2="12"
+                            ></line>
 
-                    </div>
+                            <polyline
+                                points="12 19 5 12 12 5"
+                            ></polyline>
+
+                        </svg>
+
+                        Community Dashboard
+
+                    </button>
 
                 </header>
 
@@ -1137,19 +1203,7 @@ function Attendance() {
 
                         </section>
 
-                        {loading ? (
-
-                            <div className="attendance-state dashboard-loading-state">
-
-                                <div className="spinner"></div>
-
-                                <p>
-                                    Loading attendance records...
-                                </p>
-
-                            </div>
-
-                        ) : memberAttendance.length ===
+                        {memberAttendance.length ===
                             0 ? (
 
                             <div className="attendance-empty">
@@ -1211,8 +1265,8 @@ function Attendance() {
                                                     }}
                                                 >
                                                     {
-                                                        formatDisplayDate(
-                                                            record.date
+                                                        formatSelectedDate(
+                                                            selectedDate
                                                         )
                                                     }
                                                 </strong>
@@ -1418,7 +1472,7 @@ function Attendance() {
                                 fontWeight:
                                     '600',
                                 marginTop:
-                                    '-14px'
+                                    '2px'
                             }}
                         >
 
@@ -1489,7 +1543,7 @@ function Attendance() {
 
                                 <strong className="attendance-summary-date">
                                     {
-                                        formatDisplayDate(
+                                        formatSelectedDate(
                                             selectedDate
                                         )
                                     }
@@ -1503,257 +1557,236 @@ function Attendance() {
                            ATTENDANCE LIST
                         ========================================= */}
 
-                        {loading ? (
+                        <section className="manager-attendance-section">
 
-                            <div className="attendance-state dashboard-loading-state">
+                            <div className="manager-attendance-heading">
 
-                                <div className="spinner"></div>
+                                <div>
 
-                                <p>
-                                    Loading attendance...
-                                </p>
+                                    <h2>
+                                        Member Attendance
+                                    </h2>
 
-                            </div>
-
-                        ) : (
-
-                            <section className="manager-attendance-section">
-
-                                <div className="manager-attendance-heading">
-
-                                    <div>
-
-                                        <h2>
-                                            Member Attendance
-                                        </h2>
-
-                                        <p>
-                                            Mark attendance for members on{' '}
-                                            {
-                                                formatDisplayDate(
-                                                    selectedDate
-                                                )
-                                            }.
-                                        </p>
-
-                                    </div>
+                                    <p>
+                                        Mark attendance for members on{' '}
+                                        {
+                                            formatDisplayDate(
+                                                selectedDate
+                                            )
+                                        }.
+                                    </p>
 
                                 </div>
 
-                                {!formInitialized ||
-                                    eligibleMembers.length ===
-                                    0 ? (
+                            </div>
 
-                                    <div className="attendance-empty">
+                            {!formInitialized ||
+                                eligibleMembers.length ===
+                                0 ? (
 
-                                        <h2>
-                                            No Members to Mark
-                                        </h2>
+                                <div className="attendance-empty">
 
-                                        <p>
-                                            No community members had
-                                            joined by this selected date.
-                                        </p>
+                                    <h2>
+                                        No Members to Mark
+                                    </h2>
 
-                                    </div>
+                                    <p>
+                                        No community members had
+                                        joined by this selected date.
+                                    </p>
 
-                                ) : (
+                                </div>
 
-                                    <div className="manager-attendance-list">
+                            ) : (
 
-                                        {eligibleMembers.map(
-                                            (member) => {
+                                <div className="manager-attendance-list">
 
-                                                const memberId =
-                                                    member
-                                                        ?.user
-                                                        ?._id
-                                                        ?.toString();
+                                    {eligibleMembers.map(
+                                        (member) => {
 
-                                                if (
-                                                    !memberId
-                                                ) {
-                                                    return null;
-                                                }
+                                            const memberId =
+                                                member
+                                                    ?.user
+                                                    ?._id
+                                                    ?.toString();
 
-                                                const memberName =
-                                                    member
-                                                        ?.user
-                                                        ?.username ||
-                                                    member
-                                                        ?.user
-                                                        ?.name ||
-                                                    member
-                                                        ?.user
-                                                        ?.email ||
-                                                    'Unknown Member';
+                                            if (
+                                                !memberId
+                                            ) {
+                                                return null;
+                                            }
 
-                                                const memberDesignation =
-                                                    member?.role ||
-                                                    'member';
+                                            const memberName =
+                                                member
+                                                    ?.user
+                                                    ?.username ||
+                                                member
+                                                    ?.user
+                                                    ?.name ||
+                                                member
+                                                    ?.user
+                                                    ?.email ||
+                                                'Unknown Member';
 
-                                                /*
-                                                 * Empty string means no
-                                                 * attendance has been
-                                                 * selected yet.
-                                                 */
+                                            const memberDesignation =
+                                                member?.role ||
+                                                'member';
 
-                                                const status =
-                                                    attendanceForm[
-                                                    memberId
-                                                    ] || '';
+                                            const status =
+                                                attendanceForm[
+                                                memberId
+                                                ] || '';
 
-                                                return (
-                                                    <div
-                                                        className="manager-attendance-row"
-                                                        key={
-                                                            member._id ||
-                                                            memberId
-                                                        }
-                                                    >
+                                            return (
+                                                <div
+                                                    className="manager-attendance-row"
+                                                    key={
+                                                        member._id ||
+                                                        memberId
+                                                    }
+                                                >
 
-                                                        <div className="manager-attendance-member">
+                                                    <div className="manager-attendance-member">
 
-                                                            <strong>
-                                                                {
-                                                                    memberName
+                                                        <strong>
+                                                            {
+                                                                memberName
+                                                            }
+                                                        </strong>
+
+                                                        <span>
+                                                            {
+                                                                memberDesignation
+                                                                    .charAt(
+                                                                        0
+                                                                    )
+                                                                    .toUpperCase() +
+                                                                memberDesignation.slice(
+                                                                    1
+                                                                )
+                                                            }
+                                                        </span>
+
+                                                    </div>
+
+                                                    <div className="manager-attendance-controls">
+
+                                                        <div className="attendance-choice">
+
+                                                            <button
+                                                                type="button"
+                                                                className={`button button-small ${status ===
+                                                                    'present'
+                                                                    ? 'button-primary'
+                                                                    : 'button-ghost'
+                                                                    }`}
+                                                                disabled={
+                                                                    saving
                                                                 }
-                                                            </strong>
-
-                                                            <span>
-                                                                {
-                                                                    memberDesignation
-                                                                        .charAt(
-                                                                            0
-                                                                        )
-                                                                        .toUpperCase() +
-                                                                    memberDesignation.slice(
-                                                                        1
+                                                                onClick={() =>
+                                                                    setMemberStatus(
+                                                                        memberId,
+                                                                        'present'
                                                                     )
                                                                 }
-                                                            </span>
+                                                                style={
+                                                                    status ===
+                                                                        'present'
+                                                                        ? {
+                                                                            background:
+                                                                                '#2ecc71',
+                                                                            borderColor:
+                                                                                '#2ecc71',
+                                                                            color:
+                                                                                '#000'
+                                                                        }
+                                                                        : {}
+                                                                }
+                                                            >
+                                                                Present
+                                                            </button>
 
-                                                        </div>
-
-                                                        <div className="manager-attendance-controls">
-
-                                                            <div className="attendance-choice">
-
-                                                                <button
-                                                                    type="button"
-                                                                    className={`button button-small ${status ===
-                                                                            'present'
-                                                                            ? 'button-primary'
-                                                                            : 'button-ghost'
-                                                                        }`}
-                                                                    disabled={
-                                                                        saving
-                                                                    }
-                                                                    onClick={() =>
-                                                                        setMemberStatus(
-                                                                            memberId,
-                                                                            'present'
-                                                                        )
-                                                                    }
-                                                                    style={
-                                                                        status ===
-                                                                            'present'
-                                                                            ? {
-                                                                                background:
-                                                                                    '#2ecc71',
-                                                                                borderColor:
-                                                                                    '#2ecc71',
-                                                                                color:
-                                                                                    '#000'
-                                                                            }
-                                                                            : {}
-                                                                    }
-                                                                >
-                                                                    Present
-                                                                </button>
-
-                                                                <button
-                                                                    type="button"
-                                                                    className={`button button-small ${status ===
-                                                                            'absent'
-                                                                            ? 'button-primary'
-                                                                            : 'button-ghost'
-                                                                        }`}
-                                                                    disabled={
-                                                                        saving
-                                                                    }
-                                                                    onClick={() =>
-                                                                        setMemberStatus(
-                                                                            memberId,
-                                                                            'absent'
-                                                                        )
-                                                                    }
-                                                                    style={
-                                                                        status ===
-                                                                            'absent'
-                                                                            ? {
-                                                                                background:
-                                                                                    'var(--neon-accent)',
-                                                                                borderColor:
-                                                                                    'var(--neon-accent)',
-                                                                                color:
-                                                                                    '#fff'
-                                                                            }
-                                                                            : {}
-                                                                    }
-                                                                >
-                                                                    Absent
-                                                                </button>
-
-                                                            </div>
+                                                            <button
+                                                                type="button"
+                                                                className={`button button-small ${status ===
+                                                                    'absent'
+                                                                    ? 'button-primary'
+                                                                    : 'button-ghost'
+                                                                    }`}
+                                                                disabled={
+                                                                    saving
+                                                                }
+                                                                onClick={() =>
+                                                                    setMemberStatus(
+                                                                        memberId,
+                                                                        'absent'
+                                                                    )
+                                                                }
+                                                                style={
+                                                                    status ===
+                                                                        'absent'
+                                                                        ? {
+                                                                            background:
+                                                                                'var(--neon-accent)',
+                                                                            borderColor:
+                                                                                'var(--neon-accent)',
+                                                                            color:
+                                                                                '#fff'
+                                                                        }
+                                                                        : {}
+                                                                }
+                                                            >
+                                                                Absent
+                                                            </button>
 
                                                         </div>
 
                                                     </div>
-                                                );
-                                            }
-                                        )}
 
-                                    </div>
-
-                                )}
-
-                                {/* =========================================
-                                   SAVE BUTTON
-                                ========================================= */}
-
-                                <div className="manager-attendance-footer">
-
-                                    <button
-                                        type="button"
-                                        className="button button-primary"
-                                        onClick={
-                                            handleSaveAttendance
+                                                </div>
+                                            );
                                         }
-                                        disabled={
-                                            saving ||
-                                            eligibleMembers.length ===
-                                            0
-                                        }
-                                        style={{
-                                            width: '100%',
-                                            justifyContent:
-                                                'center'
-                                        }}
-                                    >
-
-                                        {saving ? (
-                                            <span className="spinner"></span>
-                                        ) : (
-                                            'Save Attendance'
-                                        )}
-
-                                    </button>
+                                    )}
 
                                 </div>
 
-                            </section>
-                        )}
+                            )}
+
+                            {/* =========================================
+                               SAVE BUTTON
+                            ========================================= */}
+
+                            <div className="manager-attendance-footer">
+
+                                <button
+                                    type="button"
+                                    className="button button-primary"
+                                    onClick={
+                                        handleSaveAttendance
+                                    }
+                                    disabled={
+                                        saving ||
+                                        eligibleMembers.length ===
+                                        0
+                                    }
+                                    style={{
+                                        width: '100%',
+                                        justifyContent:
+                                            'center'
+                                    }}
+                                >
+
+                                    {saving ? (
+                                        <span className="spinner"></span>
+                                    ) : (
+                                        'Save Attendance'
+                                    )}
+
+                                </button>
+
+                            </div>
+
+                        </section>
 
                     </>
                 )}
@@ -1794,10 +1827,10 @@ function Attendance() {
                                 width: '100%',
                                 background: 'linear-gradient(145deg, #131418 0%, #090a0d 100%)',
                                 border: `1px solid ${saveModalError
-                                        ? 'rgba(255, 51, 51, 0.4)'
-                                        : saveModalSuccess
-                                            ? 'rgba(46, 204, 113, 0.4)'
-                                            : '#242731'
+                                    ? 'rgba(255, 51, 51, 0.4)'
+                                    : saveModalSuccess
+                                        ? 'rgba(46, 204, 113, 0.4)'
+                                        : '#242731'
                                     }`,
                                 borderRadius: '16px',
                                 padding: '36px 32px 30px',

@@ -31,9 +31,13 @@ function Register() {
         const nextErrors = {};
 
         if (!form.username.trim()) nextErrors.username = 'Username is required.';
+
         if (!/^\S+@\S+\.\S+$/.test(form.email)) nextErrors.email = 'Enter a valid email address.';
+
         if (!form.phone.trim()) nextErrors.phone = 'Phone number is required.';
+
         if (form.password.length < 6) nextErrors.password = 'Use at least 6 characters.';
+
         if (form.password !== form.confirmPassword) nextErrors.confirmPassword = 'Passwords do not match.';
 
         setErrors(nextErrors);
@@ -86,14 +90,17 @@ function Register() {
 
             <form onSubmit={submit} noValidate>
 
-                <div className="form-grid">
+                <div 
+                    className="form-grid"
+                    style={{ alignItems: 'start' }}
+                >
 
                     <Input 
                         id="username" 
                         label="Username" 
                         value={form.username} 
                         onChange={update} 
-                        placeholder="Alex Martin" 
+                        placeholder="Ayushman" 
                         autoComplete="username" 
                         error={errors.username} 
                     />

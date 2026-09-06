@@ -116,6 +116,53 @@ function Events() {
         });
     };
 
+    const renderEventDescription = (message) => {
+        if (!message) return null;
+
+        const urlRegex = /https?:\/\/[^\s]+/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = urlRegex.exec(message)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(
+                    <span key={`text-${lastIndex}`}>
+                        {message.slice(lastIndex, match.index)}
+                    </span>
+                );
+            }
+
+            parts.push(
+                <a
+                    key={`link-${match.index}`}
+                    href={match[0]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: 'var(--neon-accent)',
+                        textDecoration: 'underline',
+                        cursor: 'pointer'
+                    }}
+                >
+                    {match[0]}
+                </a>
+            );
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        if (lastIndex < message.length) {
+            parts.push(
+                <span key={`text-${lastIndex}`}>
+                    {message.slice(lastIndex)}
+                </span>
+            );
+        }
+
+        return parts.length > 0 ? parts : message;
+    };
+
     const getDateForInput = (dateVal) => {
         const timestamp = getEventTimestamp(dateVal);
         if (timestamp === null) return '';
@@ -245,14 +292,14 @@ function Events() {
             isOpen: true,
             title: 'Are you sure?',
             message: (
-    <>
-        Permanently delete{' '}
-        <span style={{ color: 'var(--neon-accent)' }}>
-            {eventName}
-        </span>{' '}
-        from the events? This action cannot be reversed.
-    </>
-),
+                <>
+                    Permanently delete{' '}
+                    <span style={{ color: 'var(--neon-accent)' }}>
+                        {eventName}
+                    </span>{' '}
+                    from the events? This action cannot be reversed.
+                </>
+            ),
             confirmLabel: 'Delete Event',
             isDanger: true,
             isLoading: false,
@@ -298,9 +345,47 @@ function Events() {
     ======================================== */
     if (loading) {
         return (
-            <main className="events-page dashboard-loading-state" style={{ minHeight: '100vh' }}>
-                <div className="spinner"></div>
-                <p>Loading events...</p>
+            <main
+                className="community-dashboard-page dashboard-loading-state"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999
+                }}
+            >
+                <style>{`
+        @keyframes miniPulse {
+          0%, 100% {
+            opacity: 0.25;
+            transform: scale(0.75);
+            box-shadow: none;
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.35);
+            box-shadow: 0 0 10px var(--neon-accent), 0 0 20px var(--neon-accent);
+          }
+        }
+      `}</style>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {[0, 0.16, 0.32].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--neon-accent)',
+                                animation: 'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                animationDelay: `${delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
             </main>
         );
     }
@@ -415,19 +500,38 @@ function Events() {
                                             )}
                                         </div>
 
-                                        <p className="event-description">
-                                            {eventItem.description || 'No description provided.'}
+                                        <p
+                                            className="event-description"
+                                            style={{ whiteSpace: 'pre-wrap' }}
+                                        >
+                                            {renderEventDescription(
+                                                eventItem.description || 'No description provided.'
+                                            )}
                                         </p>
 
                                         <div className="event-card-footer">
                                             <span style={{ textTransform: 'none' }}>
-                                                Scheduled by{' '}
-                                                <span style={{
-                                                    color: 'var(--neon-accent)',
-                                                    textTransform: 'uppercase'
-                                                }}>
-                                                    {eventItem.createdBy?.username || 'System Administrator'}
-                                                </span>
+                                                {wasEdited ? (
+                                                    <>
+                                                        Modified by{' '}
+                                                        <span style={{
+                                                            color: 'var(--neon-accent)',
+                                                            textTransform: 'uppercase'
+                                                        }}>
+                                                            {eventItem.updatedBy?.username || 'System Administrator'}
+                                                        </span>
+                                                    </>
+                                                ) : (
+                                                    <>
+                                                        Scheduled by{' '}
+                                                        <span style={{
+                                                            color: 'var(--neon-accent)',
+                                                            textTransform: 'uppercase'
+                                                        }}>
+                                                            {eventItem.createdBy?.username || 'System Administrator'}
+                                                        </span>
+                                                    </>
+                                                )}
                                             </span>
                                         </div>
                                     </article>

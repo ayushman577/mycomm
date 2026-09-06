@@ -309,7 +309,7 @@ async function addAnnouncement(req, res) {
 
         const newAnnouncement =
             community.announcements[
-                community.announcements.length - 1
+            community.announcements.length - 1
             ];
 
         // All members except the person who created it
@@ -383,7 +383,10 @@ async function updateAnnouncement(req, res) {
             });
         }
 
-        const community = await communityModel.findById(communityId);
+        const community = await communityModel
+            .findById(communityId)
+            .populate('events.createdBy', 'username')
+            .populate('events.updatedBy', 'username');
 
         if (!community) {
             return res.status(404).json({
@@ -483,7 +486,8 @@ async function getEvents(req, res) {
 
         const community = await communityModel
             .findById(communityId)
-            .populate('events.createdBy', 'username');
+            .populate('events.createdBy', 'username')
+            .populate('events.updatedBy', 'username');
 
         if (!community) {
             return res.status(404).json({
@@ -678,6 +682,7 @@ async function updateEvent(req, res) {
         event.date = eventDate;
         event.description = description?.trim() || '';
         event.updatedAt = new Date();
+        event.updatedBy = req.user.userId;
 
         await community.save();
 
@@ -1137,7 +1142,7 @@ async function getAttendance(req, res) {
                 (member) =>
                     member.user &&
                     member.user.toString() ===
-                        currentUserId
+                    currentUserId
             );
 
         if (!currentMember) {
@@ -1197,11 +1202,11 @@ async function getAttendance(req, res) {
 
                         return (
                             recordDate.getUTCFullYear() ===
-                                selectedYear &&
+                            selectedYear &&
                             recordDate.getUTCMonth() + 1 ===
-                                selectedMonth &&
+                            selectedMonth &&
                             recordDate.getUTCDate() ===
-                                selectedDay
+                            selectedDay
                         );
                     }
                 );
@@ -1253,21 +1258,21 @@ async function getAttendance(req, res) {
 
                         return (
                             recordDate.getUTCFullYear() ===
-                                selectedYear &&
+                            selectedYear &&
                             recordDate.getUTCMonth() + 1 ===
-                                selectedMonth
+                            selectedMonth
                         );
                     }
                 );
         }
         console.log(
-    'FILTERED ATTENDANCE:',
-    filteredAttendance.map(record => ({
-        member: record.member?.toString(),
-        date: record.date,
-        status: record.status
-    }))
-);
+            'FILTERED ATTENDANCE:',
+            filteredAttendance.map(record => ({
+                member: record.member?.toString(),
+                date: record.date,
+                status: record.status
+            }))
+        );
 
         return res.status(200).json({
             attendance:
@@ -1328,7 +1333,7 @@ async function takeAttendance(req, res) {
                 (member) =>
                     member.user &&
                     member.user.toString() ===
-                        currentUserId
+                    currentUserId
             );
 
         if (!currentMember) {
@@ -1416,7 +1421,7 @@ async function takeAttendance(req, res) {
                     (member) =>
                         member.user &&
                         member.user.toString() ===
-                            memberId.toString()
+                        memberId.toString()
                 );
 
             if (!targetMember) {
@@ -1506,11 +1511,11 @@ async function takeAttendance(req, res) {
                          */
                         return (
                             recordDate.getUTCFullYear() ===
-                                year &&
+                            year &&
                             recordDate.getUTCMonth() + 1 ===
-                                month &&
+                            month &&
                             recordDate.getUTCDate() ===
-                                day
+                            day
                         );
                     }
                 );
@@ -1580,11 +1585,11 @@ async function takeAttendance(req, res) {
 
                     return (
                         recordDate.getUTCFullYear() ===
-                            year &&
+                        year &&
                         recordDate.getUTCMonth() + 1 ===
-                            month &&
+                        month &&
                         recordDate.getUTCDate() ===
-                            day
+                        day
                     );
                 }
             );
@@ -1738,7 +1743,7 @@ async function leaveCommunity(req, res) {
                 (member) =>
                     member.user &&
                     member.user.toString() ===
-                        currentUserId
+                    currentUserId
             );
 
         if (!currentMember) {
@@ -1790,7 +1795,7 @@ async function leaveCommunity(req, res) {
                 (member) =>
                     member.user &&
                     member.user.toString() !==
-                        currentUserId
+                    currentUserId
             );
 
         await community.save();

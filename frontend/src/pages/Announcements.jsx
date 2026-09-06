@@ -95,6 +95,53 @@ function Announcements() {
         });
     };
 
+    const renderAnnouncementMessage = (message) => {
+        if (!message) return null;
+
+        const urlRegex = /https?:\/\/[^\s]+/g;
+        const parts = [];
+        let lastIndex = 0;
+        let match;
+
+        while ((match = urlRegex.exec(message)) !== null) {
+            if (match.index > lastIndex) {
+                parts.push(
+                    <span key={`text-${lastIndex}`}>
+                        {message.slice(lastIndex, match.index)}
+                    </span>
+                );
+            }
+
+            parts.push(
+                <a
+                    key={`link-${match.index}`}
+                    href={match[0]}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{
+                        color: 'var(--neon-accent)',
+                        textDecoration: 'underline',
+                        cursor: 'pointer'
+                    }}
+                >
+                    {match[0]}
+                </a>
+            );
+
+            lastIndex = match.index + match[0].length;
+        }
+
+        if (lastIndex < message.length) {
+            parts.push(
+                <span key={`text-${lastIndex}`}>
+                    {message.slice(lastIndex)}
+                </span>
+            );
+        }
+
+        return parts.length > 0 ? parts : message;
+    };
+
     /* ========================================
        MODAL CONTROLS
     ======================================== */
@@ -221,9 +268,47 @@ function Announcements() {
     ======================================== */
     if (loading) {
         return (
-            <main className="announcements-page dashboard-loading-state">
-                <div className="spinner"></div>
-                <p>Loading announcements...</p>
+            <main
+                className="community-dashboard-page dashboard-loading-state"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999
+                }}
+            >
+                <style>{`
+        @keyframes miniPulse {
+          0%, 100% {
+            opacity: 0.25;
+            transform: scale(0.75);
+            box-shadow: none;
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.35);
+            box-shadow: 0 0 10px var(--neon-accent), 0 0 20px var(--neon-accent);
+          }
+        }
+      `}</style>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {[0, 0.16, 0.32].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--neon-accent)',
+                                animation: 'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                animationDelay: `${delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
             </main>
         );
     }
@@ -340,8 +425,11 @@ function Announcements() {
                                                 )}
                                             </div>
 
-                                            <p className="announcement-message">
-                                                {announcement.message}
+                                            <p
+                                                className="announcement-message"
+                                                style={{ whiteSpace: 'pre-wrap' }}
+                                            >
+                                                {renderAnnouncementMessage(announcement.message)}
                                             </p>
 
                                             <div className="announcement-card-footer">

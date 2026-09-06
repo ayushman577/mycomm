@@ -63,6 +63,11 @@ function Dashboard() {
             return;
         }
 
+        if (communityDescription.length > 100) {
+            setActionError('Description cannot exceed 100 characters.');
+            return;
+        }
+
         setActionLoading(true);
         setActionError('');
 
@@ -125,9 +130,47 @@ function Dashboard() {
 
     if (loading) {
         return (
-            <main className="dashboard-page dashboard-loading-state">
-                <div className="spinner"></div>
-                <p>Loading your dashboard...</p>
+            <main
+                className="community-dashboard-page dashboard-loading-state"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999
+                }}
+            >
+                <style>{`
+        @keyframes miniPulse {
+          0%, 100% {
+            opacity: 0.25;
+            transform: scale(0.75);
+            box-shadow: none;
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.35);
+            box-shadow: 0 0 10px var(--neon-accent), 0 0 20px var(--neon-accent);
+          }
+        }
+      `}</style>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {[0, 0.16, 0.32].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--neon-accent)',
+                                animation: 'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                animationDelay: `${delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
             </main>
         );
     }
@@ -190,7 +233,7 @@ function Dashboard() {
 
             <section className="communities-section">
                 <div className="section-header-row">
-                    <h2>Active Communities</h2>
+                    <h2 >Active Communities</h2>
                     <span className="community-count-badge">{communities.length}</span>
                 </div>
 
@@ -200,7 +243,7 @@ function Dashboard() {
                             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
                         </div>
                         <h3>No Active Communities</h3>
-                        <p>You haven't joined or created any communities yet. Get started by creating a new community or joining one with a code.</p>
+                        <p>Get started by creating a new community or joining with a code.</p>
                     </div>
                 ) : (
                     <div className="communities-grid">
@@ -246,14 +289,24 @@ function Dashboard() {
                             </div>
 
                             <div className="field">
-                                <label htmlFor="communityDescription">Description (Optional)</label>
+                                <label htmlFor="communityDescription">
+                                    Description (Optional)
+                                </label>
+
                                 <textarea
                                     id="communityDescription"
                                     placeholder="Briefly describe the purpose of the community..."
                                     value={communityDescription}
-                                    onChange={(event) =>
-                                        setCommunityDescription(event.target.value)
-                                    }
+                                    maxLength={75}
+                                    onChange={(event) => {
+                                        setCommunityDescription(event.target.value);
+
+                                        if (event.target.value.length > 75) {
+                                            setActionError('Description cannot exceed 75 characters.');
+                                        } else {
+                                            setActionError('');
+                                        }
+                                    }}
                                 />
                             </div>
 

@@ -12,6 +12,7 @@ function Profile() {
 
     const [name, setName] = useState('');
     const [email, setEmail] = useState('');
+    const [phone, setPhone] = useState('');
 
     const [currentPassword, setCurrentPassword] = useState('');
     const [newPassword, setNewPassword] = useState('');
@@ -44,8 +45,9 @@ function Profile() {
 
             setProfile(user);
 
-            setName(user.name || '');
+            setName(user.username || '');
             setEmail(user.email || '');
+            setPhone(user.phone || '');
 
         } catch (err) {
 
@@ -75,13 +77,14 @@ function Profile() {
             setSaving(true);
 
             const response = await updateProfile({
-                name
+                username: name,
+                phone
             });
 
             const updatedUser = response.data.user || response.data;
 
             setProfile(updatedUser);
-            setName(updatedUser.name || name);
+            setName(updatedUser.username || name);
 
             setMessage('Profile updated successfully.');
 
@@ -183,15 +186,50 @@ function Profile() {
     };
 
     if (loading) {
-
         return (
-            <main className="profile-page">
-                <div className="profile-container">
-                    <p>Loading profile...</p>
+            <main
+                className="community-dashboard-page dashboard-loading-state"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999
+                }}
+            >
+                <style>{`
+        @keyframes miniPulse {
+          0%, 100% {
+            opacity: 0.25;
+            transform: scale(0.75);
+            box-shadow: none;
+          }
+          50% {
+            opacity: 1;
+            transform: scale(1.35);
+            box-shadow: 0 0 10px var(--neon-accent), 0 0 20px var(--neon-accent);
+          }
+        }
+      `}</style>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {[0, 0.16, 0.32].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--neon-accent)',
+                                animation: 'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                animationDelay: `${delay}s`
+                            }}
+                        />
+                    ))}
                 </div>
             </main>
         );
-
     }
 
     return (
@@ -224,13 +262,7 @@ function Profile() {
                 )}
 
 
-                {error && (
 
-                    <div className="profile-message error">
-                        {error}
-                    </div>
-
-                )}
 
 
                 <section className="profile-card">
@@ -262,6 +294,24 @@ function Profile() {
                                     setName(event.target.value)
                                 }
                                 placeholder="Enter your name"
+                            />
+
+                        </div>
+
+                        <div className="profile-form-group">
+
+                            <label htmlFor="phone">
+                                Phone
+                            </label>
+
+                            <input
+                                id="phone"
+                                type="tel"
+                                value={phone}
+                                onChange={(event) =>
+                                    setPhone(event.target.value)
+                                }
+                                placeholder="Enter your phone number"
                             />
 
                         </div>
@@ -383,6 +433,12 @@ function Profile() {
                             }
 
                         </button>
+
+                        {error && (
+                            <div className="profile-message error">
+                                {error}
+                            </div>
+                        )}
 
                     </form>
 

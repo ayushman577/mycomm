@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 
 import {
     getMembers,
+    getCommunity,
     promoteMember,
     makeOwner,
     removeMember,
@@ -23,6 +24,7 @@ function Members() {
        CORE STATE
     ========================================= */
     const [members, setMembers] = useState([]);
+    const [community, setCommunity] = useState(null);
     const [currentUserRole, setCurrentUserRole] = useState(ROLES.MEMBER);
 
     const [loading, setLoading] = useState(true);
@@ -75,23 +77,36 @@ function Members() {
         );
     };
 
-    const getMemberInitials = (name) => {
-        return name.charAt(0).toUpperCase();
-    };
-
     /* =========================================
-       LOAD MEMBERS
+       LOAD MEMBERS & COMMUNITY
     ========================================= */
     const loadMembers = useCallback(async () => {
         try {
             setLoading(true);
             setError('');
-            const response = await getMembers(communityId);
-            setMembers(response?.data?.members || []);
-            setCurrentUserRole(response?.data?.currentUserRole || ROLES.MEMBER);
+
+            const [membersResponse, communityResponse] = await Promise.all([
+                getMembers(communityId),
+                getCommunity(communityId)
+            ]);
+
+            setMembers(membersResponse?.data?.members || []);
+
+            setCurrentUserRole(
+                membersResponse?.data?.currentUserRole || ROLES.MEMBER
+            );
+
+            setCommunity(
+                communityResponse?.data?.community ||
+                communityResponse?.data
+            );
+
         } catch (err) {
             console.error('Failed to load members:', err);
-            setError(err.response?.data?.message || 'Failed to load members.');
+            setError(
+                err.response?.data?.message ||
+                'Failed to load members.'
+            );
         } finally {
             setLoading(false);
         }
@@ -209,37 +224,105 @@ function Members() {
     const canMakeOwner = (member) => member.role !== ROLES.OWNER && isOwner;
     const canRemove = (member) => member.role !== ROLES.OWNER && isOwner;
 
+    /* =========================================
+       LOADING SCREEN
+    ========================================= */
+    if (loading) {
+        return (
+            <main
+                className="members-page dashboard-loading-state"
+                style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    position: 'fixed',
+                    inset: 0,
+                    zIndex: 9999
+                }}
+            >
+                <style>{`
+                    @keyframes miniPulse {
+                        0%, 100% {
+                            opacity: 0.25;
+                            transform: scale(0.75);
+                            box-shadow: none;
+                        }
+
+                        50% {
+                            opacity: 1;
+                            transform: scale(1.35);
+                            box-shadow:
+                                0 0 10px var(--neon-accent),
+                                0 0 20px var(--neon-accent);
+                        }
+                    }
+                `}</style>
+
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                    {[0, 0.16, 0.32].map((delay, i) => (
+                        <div
+                            key={i}
+                            style={{
+                                width: '8px',
+                                height: '8px',
+                                borderRadius: '50%',
+                                backgroundColor: 'var(--neon-accent)',
+                                animation: 'miniPulse 1s cubic-bezier(0.4, 0, 0.6, 1) infinite',
+                                animationDelay: `${delay}s`
+                            }}
+                        />
+                    ))}
+                </div>
+            </main>
+        );
+    }
+
     return (
-        <main className="members-page" style={{ minHeight: '100vh', position: 'relative' }}>
+        <main
+            className="members-page"
+            style={{ minHeight: '100vh', position: 'relative' }}
+        >
             <div className="members-container">
 
                 {/* =====================================
                     HEADER
                 ====================================== */}
-                <header className="members-header">
+                <header className="announcements-header">
                     <div>
-                        <button
-                            type="button"
-                            className="button button-ghost button-small"
-                            onClick={() => navigate(`/community/${communityId}`)}
-                            style={{ marginBottom: '16px' }}
+                        <div className="workspace-badge-row">
+                            <span className="community-role">
+                                {community?.name || 'Community'}
+                            </span>
+                        </div>
+
+                        <h1 style={{ textTransform: 'none' }}>
+                            Members
+                        </h1>
+
+                        <p>Scroll down to see all the members</p>
+                    </div>
+
+                    <button
+                        type="button"
+                        className="button button-ghost button-small"
+                        onClick={() => navigate(`/community/${communityId}`)}
+                    >
+                        <svg
+                            width="14"
+                            height="14"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2.5"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
                         >
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                                <line x1="19" y1="12" x2="5" y2="12"></line>
-                                <polyline points="12 19 5 12 12 5"></polyline>
-                            </svg>
-                            Community Dashboard
-                        </button>
+                            <line x1="19" y1="12" x2="5" y2="12"></line>
+                            <polyline points="12 19 5 12 12 5"></polyline>
+                        </svg>
 
-                        <h1 style={{
-                            textTransform: 'none'
-                        }}>Members</h1>
-                    </div>
-
-                    <div className="members-count-badge">
-                        <strong>{members.length}</strong>
-                        <span>Total Members</span>
-                    </div>
+                        Community Dashboard
+                    </button>
                 </header>
 
                 {error && (
@@ -251,12 +334,7 @@ function Members() {
                 {/* =====================================
                     STATE HANDLING & LIST
                 ====================================== */}
-                {loading ? (
-                    <div className="dashboard-loading-state">
-                        <div className="spinner"></div>
-                        <p>Loading members...</p>
-                    </div>
-                ) : members.length === 0 ? (
+                {members.length === 0 ? (
                     <div className="members-empty">
                         <h2>No Members Yet</h2>
                         <p>No members have joined this community yet.</p>
@@ -265,53 +343,92 @@ function Members() {
                     <section className="members-list">
                         {members.map((member) => {
                             const memberName = getMemberName(member);
-                            const isProcessing = actionLoading && actionMemberId === member._id;
+                            const isProcessing =
+                                actionLoading &&
+                                actionMemberId === member._id;
 
                             return (
-                                <article className="member-card" key={member._id}>
+                                <article
+                                    className="member-card"
+                                    key={member._id}
+                                >
 
                                     <div className="member-profile">
-                                        <div className="member-avatar">
-                                            {getMemberInitials(memberName)}
-                                        </div>
 
                                         <div className="member-details">
-                                            <div className="member-name-row" style={{
-                                                display: 'flex',
-                                                alignItems: 'center',
-                                                gap: '8px',
-                                                marginTop: '10px'
-                                            }}>
-                                                <h2 style={{
-                                                    textTransform: 'none',
-                                                    margin: 0,
-                                                    lineHeight: 1
-                                                }}>{memberName}</h2>
+                                            <div
+                                                className="member-name-row"
+                                                style={{
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px',
+                                                    marginTop: '10px'
+                                                }}
+                                            >
+                                                <h2
+                                                    style={{
+                                                        textTransform: 'none',
+                                                        margin: 0,
+                                                        lineHeight: 1
+                                                    }}
+                                                >
+                                                    {memberName}
+                                                </h2>
 
-                                                <span className={`member-role-badge ${member.role}`}>
+                                                <span
+                                                    className={`member-role-badge ${member.role}`}
+                                                >
                                                     {member.role}
                                                 </span>
                                             </div>
 
-                                            <div className="member-meta">
-                                                <span>{member.user?.email || 'No email available'}</span>
-                                                <span className="meta-divider">•</span>
-                                                <span>Joined {formatJoinedDate(member.joinedAt)}</span>
+                                            <div
+                                                className="member-meta"
+                                                style={{ marginTop: '8px' }}
+                                            >
+                                                <span>
+                                                    {member.user?.email ||
+                                                        'No email available'}
+                                                </span>
+
+                                                <span className="meta-divider">
+                                                    •
+                                                </span>
+
+                                                <span>
+                                                    Joined{' '}
+                                                    {formatJoinedDate(
+                                                        member.joinedAt
+                                                    )}
+                                                </span>
                                             </div>
                                         </div>
                                     </div>
 
                                     <div className="member-actions">
+
                                         {canPromote(member) && (
                                             <button
                                                 type="button"
                                                 className="button button-ghost button-small"
-                                                style={{ fontSize: '10px', minHeight: '34px' }}
-                                                onClick={() => handlePromote(member._id, memberName)}
+                                                style={{
+                                                    fontSize: '10px',
+                                                    minHeight: '34px'
+                                                }}
+                                                onClick={() =>
+                                                    handlePromote(
+                                                        member._id,
+                                                        memberName
+                                                    )
+                                                }
                                                 disabled={isProcessing}
                                                 title="Make Administrator"
                                             >
-                                                {isProcessing ? <span className="spinner"></span> : 'Promote'}
+                                                {isProcessing ? (
+                                                    <span className="spinner"></span>
+                                                ) : (
+                                                    'Promote'
+                                                )}
                                             </button>
                                         )}
 
@@ -319,12 +436,24 @@ function Members() {
                                             <button
                                                 type="button"
                                                 className="button button-ghost button-small"
-                                                style={{ fontSize: '10px', minHeight: '34px' }}
-                                                onClick={() => handleDemote(member._id, memberName)}
+                                                style={{
+                                                    fontSize: '10px',
+                                                    minHeight: '34px'
+                                                }}
+                                                onClick={() =>
+                                                    handleDemote(
+                                                        member._id,
+                                                        memberName
+                                                    )
+                                                }
                                                 disabled={isProcessing}
                                                 title="Remove Administrator role"
                                             >
-                                                {isProcessing ? <span className="spinner"></span> : 'Demote'}
+                                                {isProcessing ? (
+                                                    <span className="spinner"></span>
+                                                ) : (
+                                                    'Demote'
+                                                )}
                                             </button>
                                         )}
 
@@ -332,12 +461,24 @@ function Members() {
                                             <button
                                                 type="button"
                                                 className="button button-primary button-small"
-                                                style={{ fontSize: '10px', minHeight: '34px' }}
-                                                onClick={() => handleMakeOwner(member._id, memberName)}
+                                                style={{
+                                                    fontSize: '10px',
+                                                    minHeight: '34px'
+                                                }}
+                                                onClick={() =>
+                                                    handleMakeOwner(
+                                                        member._id,
+                                                        memberName
+                                                    )
+                                                }
                                                 disabled={isProcessing}
                                                 title="Make Owner"
                                             >
-                                                {isProcessing ? <span className="spinner"></span> : 'Make Owner'}
+                                                {isProcessing ? (
+                                                    <span className="spinner"></span>
+                                                ) : (
+                                                    'Make Owner'
+                                                )}
                                             </button>
                                         )}
 
@@ -345,8 +486,16 @@ function Members() {
                                             <button
                                                 type="button"
                                                 className="button button-danger button-small"
-                                                style={{ fontSize: '10px', minHeight: '34px' }}
-                                                onClick={() => handleRemove(member._id, memberName)}
+                                                style={{
+                                                    fontSize: '10px',
+                                                    minHeight: '34px'
+                                                }}
+                                                onClick={() =>
+                                                    handleRemove(
+                                                        member._id,
+                                                        memberName
+                                                    )
+                                                }
                                                 disabled={isProcessing}
                                                 title="Remove Member"
                                             >
@@ -363,12 +512,23 @@ function Members() {
                                                         strokeLinecap="round"
                                                         strokeLinejoin="round"
                                                     >
-                                                        <line x1="18" y1="6" x2="6" y2="18"></line>
-                                                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                                                        <line
+                                                            x1="18"
+                                                            y1="6"
+                                                            x2="6"
+                                                            y2="18"
+                                                        ></line>
+                                                        <line
+                                                            x1="6"
+                                                            y1="6"
+                                                            x2="18"
+                                                            y2="18"
+                                                        ></line>
                                                     </svg>
                                                 )}
                                             </button>
                                         )}
+
                                     </div>
 
                                 </article>
@@ -405,7 +565,11 @@ function Members() {
                             width: '100%',
                             maxWidth: '440px',
                             background: 'linear-gradient(145deg, #141416 0%, #0a0a0c 100%)',
-                            border: `1px solid ${modalConfig.isDanger ? 'rgba(255, 51, 51, 0.4)' : 'var(--border-light, #2f2f38)'}`,
+                            border: `1px solid ${
+                                modalConfig.isDanger
+                                    ? 'rgba(255, 51, 51, 0.4)'
+                                    : 'var(--border-light, #2f2f38)'
+                            }`,
                             borderRadius: '12px',
                             padding: '28px',
                             boxShadow: modalConfig.isDanger
@@ -424,12 +588,15 @@ function Members() {
                                     fontWeight: 700,
                                     letterSpacing: '-0.02em',
                                     margin: 0,
-                                    color: modalConfig.isDanger ? 'var(--neon-accent, #ff3333)' : 'var(--text-primary, #ffffff)',
+                                    color: modalConfig.isDanger
+                                        ? 'var(--neon-accent, #ff3333)'
+                                        : 'var(--text-primary, #ffffff)',
                                     textTransform: 'none'
                                 }}
                             >
                                 {modalConfig.title}
                             </h3>
+
                             <p
                                 style={{
                                     fontSize: '13px',
@@ -463,7 +630,9 @@ function Members() {
                                     background: '#18181b',
                                     color: 'var(--text-secondary, #a1a1aa)',
                                     border: '1px solid var(--border-base, #27272a)',
-                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                    cursor: actionLoading
+                                        ? 'not-allowed'
+                                        : 'pointer',
                                     opacity: actionLoading ? 0.6 : 1,
                                     transition: 'all 0.2s ease'
                                 }}
@@ -473,7 +642,10 @@ function Members() {
 
                             <button
                                 type="button"
-                                onClick={() => modalConfig.onConfirm && modalConfig.onConfirm()}
+                                onClick={() =>
+                                    modalConfig.onConfirm &&
+                                    modalConfig.onConfirm()
+                                }
                                 disabled={actionLoading}
                                 style={{
                                     padding: '8px 18px',
@@ -483,12 +655,16 @@ function Members() {
                                     background: modalConfig.isDanger
                                         ? 'var(--neon-accent, #ff3333)'
                                         : 'var(--text-primary, #ffffff)',
-                                    color: modalConfig.isDanger ? '#ffffff' : '#050505',
+                                    color: modalConfig.isDanger
+                                        ? '#ffffff'
+                                        : '#050505',
                                     border: 'none',
                                     boxShadow: modalConfig.isDanger
                                         ? '0 0 14px rgba(255, 51, 51, 0.4)'
                                         : 'none',
-                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                    cursor: actionLoading
+                                        ? 'not-allowed'
+                                        : 'pointer',
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: '6px',
@@ -505,9 +681,11 @@ function Members() {
                                                 borderTopColor: '#ffffff',
                                                 borderRadius: '50%',
                                                 display: 'inline-block',
-                                                animation: 'spin 0.6s linear infinite'
+                                                animation:
+                                                    'spin 0.6s linear infinite'
                                             }}
                                         />
+
                                         Processing...
                                     </>
                                 ) : (
