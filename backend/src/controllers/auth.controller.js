@@ -61,11 +61,13 @@ async function registerUser(req, res) {
         });
 
         await newOTP.save();
+        console.log("OTP SAVED:", email);
 
         await emailService.sendOTPEmail(
             email,
             otp
         );
+        console.log("OTP EMAIL FUNCTION COMPLETED");
 
         return res.status(201).json({
             message:
