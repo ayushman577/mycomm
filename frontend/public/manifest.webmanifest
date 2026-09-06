@@ -1,18 +1,18 @@
 {
-    "name": "MyComm",
-    "short_name": "MyComm",
-    "description": "Community management platform",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#0d0b10",
-    "theme_color": "#0d0b10",
-    "orientation": "portrait-primary",
-    "icons": [
-        {
-            "src": "/mycomm-icon.svg",
-            "sizes": "any",
-            "type": "image/svg+xml",
-            "purpose": "any maskable"
-        }
-    ]
+  "name": "MyComm",
+  "short_name": "MyComm",
+  "description": "Community management platform",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d0b10",
+  "theme_color": "#0d0b10",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "/mycomm-icon.svg",
+      "sizes": "1080x1080",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
 }
