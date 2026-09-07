@@ -545,7 +545,7 @@ async function addEvent(req, res) {
             });
         }
 
-        const eventDate = new Date(date);
+        const eventDate = new Date(`${date}:00+05:30`);
 
         if (Number.isNaN(eventDate.getTime())) {
             return res.status(400).json({
@@ -633,7 +633,8 @@ async function updateEvent(req, res) {
             });
         }
 
-        const eventDate = new Date(date);
+        // Interpret frontend date/time as IST
+        const eventDate = new Date(`${date}:00+05:30`);
 
         if (Number.isNaN(eventDate.getTime())) {
             return res.status(400).json({
@@ -641,7 +642,8 @@ async function updateEvent(req, res) {
             });
         }
 
-        const community = await communityModel.findById(communityId);
+        const community =
+            await communityModel.findById(communityId);
 
         if (!community) {
             return res.status(404).json({
@@ -649,7 +651,8 @@ async function updateEvent(req, res) {
             });
         }
 
-        const currentUserId = req.user.userId.toString();
+        const currentUserId =
+            req.user.userId.toString();
 
         const member = community.members.find(
             (item) =>
@@ -659,17 +662,24 @@ async function updateEvent(req, res) {
 
         if (!member) {
             return res.status(403).json({
-                message: 'You are not a member of this community.'
+                message:
+                    'You are not a member of this community.'
             });
         }
 
-        if (member.role !== 'admin' && member.role !== 'owner') {
+        if (
+            member.role !== 'admin' &&
+            member.role !== 'owner'
+        ) {
             return res.status(403).json({
-                message: 'Only admins and owners can edit events.'
+                message:
+                    'Only admins and owners can edit events.'
             });
         }
 
-        const event = community.events.id(eventId);
+        // Find the event being edited
+        const event =
+            community.events.id(eventId);
 
         if (!event) {
             return res.status(404).json({
@@ -677,25 +687,32 @@ async function updateEvent(req, res) {
             });
         }
 
+        // Update event
         event.name = name.trim();
         event.place = place.trim();
         event.date = eventDate;
-        event.description = description?.trim() || '';
+        event.description =
+            description?.trim() || '';
         event.updatedAt = new Date();
         event.updatedBy = req.user.userId;
 
         await community.save();
 
         return res.status(200).json({
-            message: 'Event updated successfully.',
+            message:
+                'Event updated successfully.',
             event
         });
 
     } catch (error) {
-        console.error('Update event error:', error);
+        console.error(
+            'Update event error:',
+            error
+        );
 
         return res.status(500).json({
-            message: 'Failed to update event.'
+            message:
+                'Failed to update event.'
         });
     }
 }

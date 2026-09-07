@@ -837,88 +837,13 @@ function Attendance() {
        MEMBER ATTENDANCE SORTING
     ============================================= */
 
-    const memberAttendance =
-        useMemo(() => {
-            if (isManager) {
-                return [...attendance].sort(
-                    (a, b) =>
-                        new Date(
-                            b.date
-                        ).getTime() -
-                        new Date(
-                            a.date
-                        ).getTime()
-                );
-            }
-
-            const currentUser =
-                members.find(
-                    (member) =>
-                        member?.user?._id
-                );
-
-            const joinedAt =
-                currentUser?.joinedAt;
-
-            if (!joinedAt) {
-                return [...attendance].sort(
-                    (a, b) =>
-                        new Date(
-                            b.date
-                        ).getTime() -
-                        new Date(
-                            a.date
-                        ).getTime()
-                );
-            }
-
-            const joinedDate =
-                new Date(joinedAt);
-
-            if (
-                Number.isNaN(
-                    joinedDate.getTime()
-                )
-            ) {
-                return [...attendance].sort(
-                    (a, b) =>
-                        new Date(
-                            b.date
-                        ).getTime() -
-                        new Date(
-                            a.date
-                        ).getTime()
-                );
-            }
-
-            return attendance
-                .filter((record) => {
-                    const attendanceDate =
-                        new Date(record.date);
-
-                    return (
-                        !Number.isNaN(
-                            attendanceDate.getTime()
-                        ) &&
-                        attendanceDate.getTime() >=
-                        joinedDate.getTime()
-                    );
-                })
-                .sort(
-                    (a, b) =>
-                        new Date(
-                            b.date
-                        ).getTime() -
-                        new Date(
-                            a.date
-                        ).getTime()
-                );
-
-        }, [
-            attendance,
-            members,
-            isManager
-        ]);
+    const memberAttendance = useMemo(() => {
+        return [...attendance].sort(
+            (a, b) =>
+                new Date(b.date).getTime() -
+                new Date(a.date).getTime()
+        );
+    }, [attendance]);
 
     /* =========================================
        LOADING
@@ -1265,8 +1190,8 @@ function Attendance() {
                                                     }}
                                                 >
                                                     {
-                                                        formatSelectedDate(
-                                                            selectedDate
+                                                        formatDisplayDate(
+                                                            record.date
                                                         )
                                                     }
                                                 </strong>
