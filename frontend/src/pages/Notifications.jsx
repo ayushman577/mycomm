@@ -149,7 +149,9 @@ function Notifications() {
                                 </div>
 
                                 <h2>{notification.title}</h2>
-                                <p>{notification.message}</p>
+                                <p style={{ whiteSpace: 'pre-wrap' }}>
+                                    {notification.message}
+                                </p>
 
                                 <div className="notification-card-footer">
                                     <span className="notification-open">
