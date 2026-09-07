@@ -388,9 +388,7 @@ const sendAnnouncementEmail = async (email, communityName, title, message) => {
                                     <table width="100%" cellpadding="0" cellspacing="0" border="0">
                                         <tr>
                                             <td style="padding:22px 24px; background-color:#050506; border-left:3px solid #ff3333; border-top:1px solid #1f1f24; border-right:1px solid #1f1f24; border-bottom:1px solid #1f1f24; border-radius:8px;">
-                                                <p style="margin:0; font-size:14px; line-height:1.7; color:#d4d4d8; white-space:pre-wrap;">
-                                                    ${message}
-                                                </p>
+                                                <p style="margin:0; font-size:14px; line-height:1.7; color:#d4d4d8; white-space:pre-wrap;">${message}</p>
                                             </td>
                                         </tr>
                                     </table>
